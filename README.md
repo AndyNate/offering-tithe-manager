@@ -67,6 +67,13 @@ npm run test:db      # database test suites (run under electron)
 
 `npm run dist` builds for whichever OS you are currently on. Installers are unsigned unless code-signing certificates are configured.
 
+### Installing unsigned builds
+
+Because the release installers are not code-signed (code-signing certificates cost money), Windows SmartScreen and macOS Gatekeeper show an "unknown publisher / can't be verified" warning on first run. This is expected for an unsigned open-source app — it is not an error, and it typically fades as the app gains download reputation from users who have installed it.
+
+- **Windows** — right-click the `.exe` → **Properties → General → Unblock → OK**, then run it; or in the SmartScreen dialog click **More info → Run anyway**.
+- **macOS** — right-click the `.dmg` or `.app` → **Open** (instead of double-click), then confirm **Open** in the dialog. This is only needed once.
+
 ### Automated builds (GitHub Actions)
 
 Pushing a version tag (e.g. `git tag v1.1.0 && git push origin v1.1.0`) triggers `.github/workflows/build.yml`, which builds the Windows, macOS, and Linux installers in parallel on GitHub's machines and attaches them to the matching GitHub Release. The workflow can also be run manually from the Actions tab.
