@@ -100,15 +100,7 @@ function migrateGivingOnline() {
 }
 
 // Password hashing uses scrypt (a memory-hard KDF) with a per-user random
-// salt, encoded as "scrypt$<salt-hex>$<derivedkey-hex>". Plain SHA-256 was
-// used before (CodeQL js/insufficient-password-hash); legacy hashes are
-// still accepted in verifyPassword so existing users are not locked out, but
-// are opportunistically upgraded to scrypt on first successful login.
-function isScryptHash(stored) {
-  const parts = String(stored).split('$');
-  return parts[0] === 'scrypt' && parts.length === 3 && !!parts[1] && /^[0-9a-f]+$/i.test(parts[2]);
-}
-
+// salt, encoded as "scrypt$<salt-hex>$<derivedkey-hex>".
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const derivedKey = crypto.scryptSync(String(password), salt, 32);
@@ -116,25 +108,12 @@ function hashPassword(password) {
 }
 
 function verifyPasswordHash(password, stored) {
-  if (isScryptHash(stored)) {
-    const parts = String(stored).split('$');
-    const [, salt, hashHex] = parts;
-    const expected = Buffer.from(hashHex, 'hex');
-    const actual = crypto.scryptSync(String(password), salt, expected.length);
-    return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
-  }
-  // Legacy: unsalted SHA-256 hash from before the scrypt migration. Only used
-  // during the transitional period to authenticate records created by older
-  // versions; once a user logs in successfully the hash is upgraded to scrypt
-  // in verifyPassword, so no legacy hash persists. This is an intentional,
-  // temporary compatibility path.
-  // codeql[js/insufficient-password-hash]
-  return sha256(password) === stored;
-}
-
-function sha256(s) {
-  // codeql[js/insufficient-password-hash] — transient legacy hash verifier (see verifyPassword)
-  return crypto.createHash('sha256').update(String(s), 'utf8').digest('hex');
+  const parts = String(stored).split('$');
+  if (parts[0] !== 'scrypt' || parts.length !== 3) return false;
+  const [, salt, hashHex] = parts;
+  const expected = Buffer.from(hashHex, 'hex');
+  const actual = crypto.scryptSync(String(password), salt, expected.length);
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
 class AppError extends Error {
@@ -175,16 +154,7 @@ function setEmailRecipients(list) {
 }
 
 function verifyPassword(password) {
-  const stored = getSetting('admin_password_hash');
-  if (!verifyPasswordHash(password, stored)) return false;
-
-  // Opportunistic migration: if this was a legacy non-scrypt hash and login
-  // succeeded, immediately upgrade it to scrypt so weak hashes do not persist.
-  if (!isScryptHash(stored)) {
-    setSetting('admin_password_hash', hashPassword(password));
-  }
-
-  return true;
+  return verifyPasswordHash(password, getSetting('admin_password_hash'));
 }
 
 function setPassword(password) {

@@ -1,5 +1,4 @@
 const assert = require('assert');
-const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -39,15 +38,10 @@ t('password change requires current password and matching confirmation', () => {
   assert.strictEqual(db.verifyPassword('changed'), true);
   db.setPassword('admin');
 });
-t('legacy SHA-256 hash is upgraded to scrypt on successful login', () => {
-  const legacy = crypto.createHash('sha256').update('legacy-pw', 'utf8').digest('hex');
-  db.setSetting('admin_password_hash', legacy);
-  assert.strictEqual(db.verifyPassword('legacy-pw'), true);
-  const migrated = db.getSetting('admin_password_hash');
-  assert.ok(migrated.startsWith('scrypt$'), 'stored hash should be upgraded to scrypt');
-  assert.strictEqual(db.verifyPassword('legacy-pw'), true);
-  assert.strictEqual(db.verifyPassword('wrong-pw'), false);
-  assert.strictEqual(db.getSetting('admin_password_hash'), migrated, 'failed login must not rewrite hash');
+t('non-scrypt hashes are rejected (no legacy support)', () => {
+  db.setSetting('admin_password_hash', 'not-a-scrypt-hash');
+  assert.strictEqual(db.verifyPassword('anything'), false);
+  assert.strictEqual(db.getSetting('admin_password_hash'), 'not-a-scrypt-hash', 'stored hash must not be altered');
   db.setPassword('admin');
 });
 t('email recipients roundtrip + dedupe (case-insensitive)', () => {
