@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      electron:
+        patterns:
+          - "electron"
+          - "electron-builder"
+          - "@electron/*"
+      native:
+        patterns:
+          - "better-sqlite3"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
