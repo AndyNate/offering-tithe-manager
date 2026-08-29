@@ -56,8 +56,6 @@ npm start            # run the app in dev mode
 npm run test:db      # database test suites (run under electron)
 ```
 
-Note: if a command fails with a file-lock/EBUSY error while OneDrive is syncing, simply retry.
-
 ## Packaging & installers
 
 `electron-builder` targets all three platforms. Each installer must be built **on its own OS** (the `better-sqlite3` native module is compiled per platform); the app icon lives at `app/build/icon.png` and is converted automatically for each target.
