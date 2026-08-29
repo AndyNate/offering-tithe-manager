@@ -34,7 +34,6 @@ Opened from the **Admin** tab with the password (`admin`); **Log out** returns t
   - **Windows (NSIS install), macOS, Linux** — the standard per-user app data folder (Electron `userData`): `%APPDATA%` on Windows, `~/Library/Application Support` on macOS, `~/.config` on Linux — under a folder named `Offering & Tithe Management Program`.
 - Anyone can run the program against a different database file at any time: **Admin → Settings → Database → "Use another database…"**. The choice is remembered and the app restarts on that file; click "Return to default database" to go back. "Back up database" saves a copy of the current file wherever you choose.
 - When installing a newer Windows build into a fresh portable folder, **copy your existing `data\offering-tithe.db` into the new folder's `data\` directory** to keep your records.
-- Existing databases are upgraded automatically on first launch: the `Tithly` payment method is renamed to **Online** (and its fee column to `online_fee_amount`), so any prior "Tithly" records read as "Online".
 
 ## Database
 The live schema (created by `app/db.js`) contains:
