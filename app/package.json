@@ -3,6 +3,10 @@
   "productName": "Offering & Tithe Management Program",
   "version": "1.0.1",
   "description": "Offering and tithe management desktop app (Electron + SQLite)",
+  "author": {
+    "name": "Nathan Allen",
+    "email": "108701336+AndyNate@users.noreply.github.com"
+  },
   "main": "main.js",
   "private": true,
   "repository": {
