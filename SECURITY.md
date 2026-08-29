@@ -14,7 +14,7 @@ Only the latest tagged release is actively supported with security fixes.
 Please report vulnerabilities **privately** — do not open a public issue.
 
 1. Use GitHub **Private vulnerability reporting**: this repository's **Security** tab → **Report a vulnerability**.
-2. Preferring email? Contact `<security@example.com>` (replace with a real address before publishing this repo publicly).
+2. Preferring email? Contact `nathandouglasallen@gmail.com`.
 
 Please include:
 
