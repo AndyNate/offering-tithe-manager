@@ -117,11 +117,15 @@ function verifyPasswordHash(password, stored) {
     const actual = crypto.scryptSync(String(password), salt, expected.length);
     return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
   }
-  // Legacy: unsalted SHA-256 hash from before the scrypt migration.
+  // Legacy: unsalted SHA-256 hash from before the scrypt migration. Only used
+  // to verify hashes created by older versions so existing users are not locked
+  // out; new/updated passwords are always stored with scrypt.
+  // codeql[js/insufficient-password-hash]
   return sha256(password) === stored;
 }
 
 function sha256(s) {
+  // codeql[js/insufficient-password-hash] — legacy-only hash verifier (see verifyPasswordHash)
   return crypto.createHash('sha256').update(String(s), 'utf8').digest('hex');
 }
 
