@@ -5,6 +5,10 @@
   "description": "Offering and tithe management desktop app (Electron + SQLite)",
   "main": "main.js",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AndyNate/offering-tithe-manager.git"
+  },
   "scripts": {
     "start": "electron .",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
