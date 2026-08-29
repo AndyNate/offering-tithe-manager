@@ -1,0 +1,37 @@
+# Node / dependencies
+node_modules/
+app/node_modules/
+
+# Build outputs
+app/dist/
+app/Offering-Tithe-Program.7z
+app/Offering-Tithe-Program.zip
+
+# Local application data (never commit real church records)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# AI/AI-tool change log (not source)
+changelog.md
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
+# Design-tool / prototype artifacts not published as source
+# (anchored to the repo root so app/ source files with the same names are kept)
+_thumbnail
+.thumbnail
+_debug_sharedStrings.xml
+_debug_sheet1.xml
+uploads/
+_ds/
+app/src/_ds-modernist/
+/AWC Donor Form.dc.html
+/design_handoff_electron_donor_app/
+/support.js
+/deposit-template.xlsx
+/schema.sql

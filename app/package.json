@@ -1,0 +1,107 @@
+{
+  "name": "offering-tithe-program",
+  "productName": "Offering & Tithe Management Program",
+  "version": "1.0.0",
+  "description": "Offering and tithe management desktop app (Electron + SQLite)",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-rebuild -f -w better-sqlite3 || echo \"electron-rebuild skipped (prebuilt binary may already match)\"",
+    "test:db": "electron --no-sandbox test/db.test.js && electron --no-sandbox test/migration.test.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "electron": "^31.7.7",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "ca.awc.offering-tithe",
+    "files": [
+      "main.js",
+      "preload.js",
+      "db.js",
+      "schema.sql",
+      "src/**/*"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "Offering-Tithe-Program-Setup-${version}.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Offering & Tithe Management Program"
+    },
+    "portable": {
+      "artifactName": "Offering-Tithe-Program-Portable.exe"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.finance",
+      "artifactName": "Offering-Tithe-Program-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Office",
+      "artifactName": "offering-tithe-program-${version}-${arch}.${ext}"
+    }
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "electron@31.7.7": true
+  }
+}

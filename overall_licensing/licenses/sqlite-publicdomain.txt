@@ -1,0 +1,18 @@
+SQLite Database Engine
+======================
+
+All of the code and documentation in SQLite has been dedicated to the
+public domain by the authors. All code authors, and representatives of
+the companies they work for have signed affidavits dedicating their
+contributions to the public domain.
+
+Original source: https://www.sqlite.org/copyright.html
+
+SQLite is bundled inside the better-sqlite3 dependency used by this
+application. No attribution is legally required for public-domain
+software; it is included here for completeness.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute original or modified SQLite code, in source code form or as
+a compiled binary, for any purpose, commercial or non-commercial, and
+by any means.
