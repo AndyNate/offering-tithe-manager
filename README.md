@@ -6,6 +6,17 @@ Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored l
 
 > **AI-assisted development:** this program was developed with the assistance of AI tooling.
 
+## Screenshots
+
+![Give (entry) form](screenshots/1.png)
+![Admin panel](screenshots/2.png)
+![Search / edit donor / deposits](screenshots/3.png)
+![Month-end report / fund totals](screenshots/4.png)
+![Year-end report / giving table](screenshots/5.png)
+![Admin mode / Give (entry) form](screenshots/6.png)
+![Admin mode / Give (entry) form E-Transfer](screenshots/7.png)
+![Admin mode / Give (entry) form Online](screenshots/8.png)
+
 ## Give (entry) form
 - Single **Full name or Tithe ID** field — matched against the donors table; unmatched names auto-create a donor with the lowest unused Tithe ID (starting at `1`, so numbers freed by deleted donors are reused); an unmatched numeric input errors with "Tithe ID doesn't exist."
 - **Giving date** field — only shown/editable after admin sign-in; otherwise defaults to today.
