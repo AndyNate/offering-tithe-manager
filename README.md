@@ -89,6 +89,13 @@ Pushing a version tag (e.g. `git tag v1.1.0 && git push origin v1.1.0`) triggers
 | Dependency audit (npm) | `npm audit` against production dependencies | high/critical vulnerabilities |
 | CodeQL | GitHub's static analysis; results appear in the Security tab (report-only until code scanning is enforced) | no (reports only) |
 
+## Security notes
+
+- **Admin authorization is enforced in the main process**, not just hidden in the UI. Destructive/admin actions (deleting donors/gifts/deposits, editing giving, CSV import, settings changes) require a valid admin session server-side; the renderer cannot bypass these by calling the exposed IPC methods directly.
+- **Email sending is available to all sessions** — non-admin volunteers can record a deposit and send its report email. The raw **Brevo API key is only surfaced to an authenticated admin session**; it is stored in the SQLite `settings` table (not a plaintext file), read internally in the main process, and never logged.
+- **Exported CSV files are hardened against spreadsheet formula injection** (CWE-1236): any exported cell beginning with `=`, `+`, `-`, or `@` is prefixed so Excel/Sheets treat it as plain text. Because imported donor/note data is stored verbatim, treat any CSV you import as untrusted input.
+- **The admin password is stored as a salted scrypt hash** (not SHA-256). The initial password is `admin` — change it from the Admin panel after first use.
+
 ## Files
 - `app/` — the Electron application (main process `main.js`, database layer `db.js`, preload bridge `preload.js`, UI in `src/index.html` + `src/support.js`, tests in `test/`, build icon in `build/`).
 - `app/dist/` — built installers: `Offering-Tithe-Program-Setup-*.exe`, `Offering-Tithe-Program-Portable.exe`, `.dmg`/`.zip`, `.AppImage`/`.deb` (see "Packaging & installers").

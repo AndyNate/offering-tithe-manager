@@ -187,10 +187,13 @@ handle('csv:importGiving', (rows) => {
 });
 
 // settings
+// The Brevo API key and sender are only surfaced to authenticated admin sessions.
+// Non-admin volunteers can still send deposit emails (the key is read internally
+// by sendDepositEmail in the main process) but never receive the raw key.
 handle('settings:get', () => ({
   orgName: db.getSetting('org_name', 'OTMP'),
-  brevoApiKey: db.getSetting('brevo_api_key', ''),
-  brevoSenderEmail: db.getSetting('brevo_sender_email', ''),
+  brevoApiKey: authed ? db.getSetting('brevo_api_key', '') : '',
+  brevoSenderEmail: authed ? db.getSetting('brevo_sender_email', '') : '',
   emailRecipients: db.getEmailRecipients(),
 }));
 handle('settings:set', ({ key, value }) => {

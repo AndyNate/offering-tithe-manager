@@ -526,11 +526,13 @@ function otherReport(year, month) {
 
 function fundTotals(year, month) {
   const y = String(year);
-  const where = month != null ? " AND strftime('%m', date) = '" + String(month).padStart(2, '0') + "'" : '';
+  const hasMonth = month != null && String(month).trim() !== '';
+  const params = hasMonth ? [y, String(month).padStart(2, '0')] : [y];
+  const where = hasMonth ? " AND strftime('%m', date) = ?" : '';
   const row = db.prepare(
     `SELECT SUM(regular) AS regular, SUM(mission) AS mission, SUM(building_fund) AS building_fund, SUM(other) AS other
      FROM giving WHERE strftime('%Y', date) = ?${where}`
-  ).get(y);
+  ).get(...params);
   return {
     regular: row.regular || 0,
     mission: row.mission || 0,
@@ -588,10 +590,16 @@ function insertDeposit(payload, opts = {}) {
     coin1: toCents(c.coin1), coin2: toCents(c.coin2),
     otherLooseCoin: toCents(c.otherLooseCoin), otherRolledCoin: toCents(c.otherRolledCoin),
   };
+  // Reject negative counts/amounts server-side so a crafted call cannot produce
+  // a negative deposit subtotal (mirrors the renderer's min=0, enforced here too).
+  if (Object.values(counts).some((n) => n < 0)) throw new AppError('Deposit counts cannot be negative.');
   const cheques = (Array.isArray(payload.cheques) ? payload.cheques : [])
     .filter((ch) => String(ch.identification || '').trim() !== '' || toCents(ch.amount) > 0)
     .slice(0, 15)
-    .map((ch) => ({ identification: String(ch.identification || '').trim(), amount: toCents(ch.amount) }));
+    .map((ch) => {
+      if (toCents(ch.amount) < 0) throw new AppError('Cheque amounts cannot be negative.');
+      return { identification: String(ch.identification || '').trim(), amount: toCents(ch.amount) };
+    });
 
   const billsTotal = counts.bill5 * 500 + counts.bill10 * 1000 + counts.bill20 * 2000 + counts.bill50 * 5000 + counts.bill100 * 10000;
   const coinsTotal = counts.coin1 * 100 + counts.coin2 * 200 + counts.otherLooseCoin + counts.otherRolledCoin;

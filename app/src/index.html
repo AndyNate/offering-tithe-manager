@@ -1169,6 +1169,10 @@ class Component extends DCLogic {
   downloadCSV(filename, headers, rows) {
     const esc = (v) => {
       const s = v === null || v === undefined ? '' : String(v);
+      // Neutralize CSV formula injection (CWE-1236): when a cell begins with
+      // = + - @, prefix a single quote so Excel/Sheets treat it as text, not a
+      // formula. Normal names, notes and amounts are unaffected.
+      if (/^[=+\-@]/.test(s.trim())) return '"' + "'" + s.replace(/"/g, '""') + '"';
       return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
     const csv = [headers, ...rows].map(row => row.map(esc).join(',')).join('\r\n');
