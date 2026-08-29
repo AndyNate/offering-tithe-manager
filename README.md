@@ -91,6 +91,17 @@ To make the three blocking checks **required** so a pull request cannot merge wi
 - `Security scan / Code scan (Semgrep)`
 - `Security scan / Dependency audit (npm)`
 
+### Before making the repository public
+
+Work through this in order, while the repo is still private:
+
+1. **Let Dependabot propose dependency upgrades** (`Dependabot` tab). Merge its security PRs — especially the big Electron upgrade — until the vulnerable-dependency count in the Security tab drops to zero. Electron's runtime is bundled into every installer, so its CVEs affect shipped apps.
+2. **Tighten the audit gate** (currently prod-only, so it stays green during the upgrade) to include dev/build dependencies: change the workflow's `npm audit --omit=dev --audit-level=high` to `npm audit --audit-level=high`. This makes future build-toolchain CVEs block PRs too.
+3. **Require the security checks on `main`** (branch protection / ruleset) as described above, if not done already.
+4. **Flip the repo public** in **Settings → General → Danger Zone**. The moment it's public you unlock the rest for free: GitHub native **secret scanning**, **push protection**, **code scanning**, and the CodeQL job will start uploading results to the Security tab automatically.
+5. **Set the repo description** (e.g. *"Offering & tithe management desktop app (Electron + SQLite) for recording donations, donors, deposits, and month/year-end reports. Cross-platform: Windows, macOS, Linux."*) and open **Private vulnerability reporting** under Settings → Code security so strangers can report issues via `SECURITY.md`.
+6. Consider enabling **two-factor authentication** on your GitHub account (Settings → Password and authentication).
+
 ## Files
 - `app/` — the Electron application (main process `main.js`, database layer `db.js`, preload bridge `preload.js`, UI in `src/index.html` + `src/support.js`, tests in `test/`, build icon in `build/`).
 - `app/dist/` — built installers: `Offering-Tithe-Program-Setup-*.exe`, `Offering-Tithe-Program-Portable.exe`, `.dmg`/`.zip`, `.AppImage`/`.deb` (see "Packaging & installers").
