@@ -8,14 +8,25 @@ Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored l
 
 ## Screenshots
 
-![Give (entry) form](screenshots/1.png)
-![Admin panel](screenshots/2.png)
-![Search / edit donor / deposits](screenshots/3.png)
-![Month-end report / fund totals](screenshots/4.png)
-![Year-end report / giving table](screenshots/5.png)
-![Admin mode / Give (entry) form](screenshots/6.png)
-![Admin mode / Give (entry) form E-Transfer](screenshots/7.png)
-![Admin mode / Give (entry) form Online](screenshots/8.png)
+<p align="center">
+  <table>
+    <tr>
+      <td><p align="center"><img src="screenshots/1.png" width="300" alt="Give (entry) form"/></p></td>
+      <td><p align="center"><img src="screenshots/2.png" width="300" alt="Admin panel"/></p></td>
+      <td><p align="center"><img src="screenshots/3.png" width="300" alt="Search / edit donor / deposits"/></p></td>
+    </tr>
+    <tr>
+      <td><p align="center"><img src="screenshots/4.png" width="300" alt="Month-end report / fund totals"/></p></td>
+      <td><p align="center"><img src="screenshots/5.png" width="300" alt="Year-end report / giving table"/></p></td>
+      <td><p align="center"><img src="screenshots/6.png" width="300" alt="Admin mode / Give (entry) form"/></p></td>
+    </tr>
+    <tr>
+      <td><p align="center"><img src="screenshots/7.png" width="300" alt="Admin mode / Give (entry) form E-Transfer"/></p></td>
+      <td><p align="center"><img src="screenshots/8.png" width="300" alt="Admin mode / Give (entry) form Online"/></p></td>
+      <td></td>
+    </tr>
+  </table>
+</p>
 
 ## Give (entry) form
 - Single **Full name or Tithe ID** field — matched against the donors table; unmatched names auto-create a donor with the lowest unused Tithe ID (starting at `1`, so numbers freed by deleted donors are reused); an unmatched numeric input errors with "Tithe ID doesn't exist."
