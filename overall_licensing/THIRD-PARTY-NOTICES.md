@@ -7,15 +7,15 @@ these notices with distributions of the app. Full license texts are in the
 
 | Component | Version | Use in this project | License | Copyright holder |
 |---|---|---|---|---|
-| Electron | 31.7.7 | Desktop app framework (window, IPC, packaging runtime) | MIT | Electron contributors / GitHub Inc. |
+| Electron | 43.4.1 | Desktop app framework (window, IPC, packaging runtime) | MIT | Electron contributors / GitHub Inc. |
 | Chromium (bundled in Electron) | — | Rendering engine inside Electron | BSD-style + many embedded licenses (see `LICENSES.chromium.html` shipped in every Electron build) | The Chromium Authors |
 | Node.js (bundled in Electron) | — | JavaScript runtime inside Electron | MIT | Node.js contributors |
-| better-sqlite3 | 12.11.1 | SQLite database driver (`app/db.js`) | MIT | Joshua Wise |
+| better-sqlite3 | 13.0.3 | SQLite database driver (`app/db.js`) | MIT | Joshua Wise |
 | SQLite engine (compiled by better-sqlite3) | — | Database file format and queries | Public domain | D. Richard Hipp & contributors |
 | React + ReactDOM | 18.3.1 | UI rendering (`app/src/vendor/react*.js`) | MIT | Meta Platforms, Inc. and affiliates |
 | Archivo font (variable, latin subset) | v2.000 | App typography (`app/src/vendor/fonts/`) | SIL Open Font License 1.1 | The Archivo Project Authors (Omnibus-Type) |
 | electron-builder | 26.15.3 | Build tool that produces the packaged .exe (dev-time only, not shipped inside the app) | MIT | Loopline Systems |
-| @electron/rebuild | 3.7.2 | Rebuilds native modules for Electron's ABI (dev-time only) | MIT | Contributors to the Electron project |
+| @electron/rebuild | 4.2.0 | Rebuilds native modules for Electron's ABI (dev-time only) | MIT | Contributors to the Electron project |
 | NSIS | 3.0.4.1 | Generates the portable-exe wrapper (build-time only) | zlib/libpng license (NSIS license) | Nullsoft & contributors |
 
 ## Notes on specific components
