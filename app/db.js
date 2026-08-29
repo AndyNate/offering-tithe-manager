@@ -47,7 +47,7 @@ function init(dbPath) {
 
   // Seed settings defaults (default password; changeable in-app later)
   const seed = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
-  seed.run('admin_password_hash', sha256(DEFAULT_PASSWORD));
+  seed.run('admin_password_hash', hashPassword(DEFAULT_PASSWORD));
   seed.run('org_name', 'OTMP');
   seed.run('brevo_api_key', '');
   seed.run('brevo_sender_email', '');
@@ -99,6 +99,28 @@ function migrateGivingOnline() {
   })();
 }
 
+// Password hashing uses scrypt (a memory-hard KDF) with a per-user random
+// salt, encoded as "scrypt$<salt-hex>$<derivedkey-hex>". Plain SHA-256 was
+// used before (CodeQL js/insufficient-password-hash); legacy hashes are
+// still accepted in verifyPassword so existing users are not locked out.
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = crypto.scryptSync(String(password), salt, 32);
+  return 'scrypt$' + salt + '$' + derivedKey.toString('hex');
+}
+
+function verifyPasswordHash(password, stored) {
+  const parts = String(stored).split('$');
+  if (parts[0] === 'scrypt' && parts.length === 3) {
+    const [, salt, hashHex] = parts;
+    const expected = Buffer.from(hashHex, 'hex');
+    const actual = crypto.scryptSync(String(password), salt, expected.length);
+    return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+  }
+  // Legacy: unsalted SHA-256 hash from before the scrypt migration.
+  return sha256(password) === stored;
+}
+
 function sha256(s) {
   return crypto.createHash('sha256').update(String(s), 'utf8').digest('hex');
 }
@@ -141,12 +163,12 @@ function setEmailRecipients(list) {
 }
 
 function verifyPassword(password) {
-  return sha256(password) === getSetting('admin_password_hash');
+  return verifyPasswordHash(password, getSetting('admin_password_hash'));
 }
 
 function setPassword(password) {
   if (!password || String(password).length < 4) throw new AppError('Password must be at least 4 characters.');
-  setSetting('admin_password_hash', sha256(password));
+  setSetting('admin_password_hash', hashPassword(password));
 }
 
 function changePassword(currentPassword, newPassword, confirmation) {
