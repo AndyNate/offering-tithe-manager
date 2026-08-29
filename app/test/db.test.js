@@ -17,7 +17,7 @@ function t(name, fn) {
   }
 }
 
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'awc-test-'));
+const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'otm-test-'));
 db.init(path.join(tmpDir, 'test.db'));
 
 // ---- settings / password
@@ -197,9 +197,9 @@ t('titheSheetTotal sums same-day cash gifts only', () => {
   assert.ok(s.total >= 0); // no gifts dated today in fixture unless seeded
 });
 t('markDepositEmailed stamps recipient', () => {
-  db.markDepositEmailed('12', 'team@awc.ca');
+  db.markDepositEmailed('12', 'team@example.com');
   const [d] = db.listDeposits();
-  assert.strictEqual(d.emailedTo, 'team@awc.ca');
+  assert.strictEqual(d.emailedTo, 'team@example.com');
 });
 t('deleteDeposit removes the row', () => {
   db.deleteDeposit('12');

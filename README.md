@@ -1,8 +1,8 @@
 # Offering & Tithe Management Program
 
-A cross-platform desktop application (Windows, macOS, Linux) for AWC's offering/tithe recording: volunteers enter donations through a simple **Give** form, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
+A cross-platform desktop application (Windows, macOS, Linux) for offering/tithe recording: volunteers enter donations through a simple **Give** form, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
 
-Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline). The original browser prototype (`AWC Donor Form.dc.html`) and its handoff package (`design_handoff_electron_donor_app/`) are kept for reference.
+Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
 
 > **AI-assisted development:** this program was developed with the assistance of AI tooling.
 
@@ -82,32 +82,13 @@ Pushing a version tag (e.g. `git tag v1.1.0 && git push origin v1.1.0`) triggers
 | Dependency audit (npm) | `npm audit` against production dependencies | high/critical vulnerabilities |
 | CodeQL | GitHub's static analysis; results appear in the Security tab (report-only until code scanning is enforced) | no (reports only) |
 
-To make the three blocking checks **required** so a pull request cannot merge with a failing scan: **Settings → Branches → Add branch protection rule** (or **Settings → Rulesets**), target `main`/`master`, enable *Require status checks to be passing*, and add:
-
-- `Security scan / Secrets (gitleaks)`
-- `Security scan / Code scan (Semgrep)`
-- `Security scan / Dependency audit (npm)`
-
-### Before making the repository public
-
-Work through this in order, while the repo is still private:
-
-1. **Let Dependabot propose dependency upgrades** (`Dependabot` tab). Merge its security PRs — especially the big Electron upgrade — until the vulnerable-dependency count in the Security tab drops to zero. Electron's runtime is bundled into every installer, so its CVEs affect shipped apps.
-2. **Tighten the audit gate** (currently prod-only, so it stays green during the upgrade) to include dev/build dependencies: change the workflow's `npm audit --omit=dev --audit-level=high` to `npm audit --audit-level=high`. This makes future build-toolchain CVEs block PRs too.
-3. **Require the security checks on `main`** (branch protection / ruleset) as described above, if not done already.
-4. **Flip the repo public** in **Settings → General → Danger Zone**. The moment it's public you unlock the rest for free: GitHub native **secret scanning**, **push protection**, **code scanning**, and the CodeQL job will start uploading results to the Security tab automatically.
-5. **Set the repo description** (e.g. *"Offering & tithe management desktop app (Electron + SQLite) for recording donations, donors, deposits, and month/year-end reports. Cross-platform: Windows, macOS, Linux."*) and open **Private vulnerability reporting** under Settings → Code security so strangers can report issues via `SECURITY.md`.
-6. Consider enabling **two-factor authentication** on your GitHub account (Settings → Password and authentication).
-
 ## Files
 - `app/` — the Electron application (main process `main.js`, database layer `db.js`, preload bridge `preload.js`, UI in `src/index.html` + `src/support.js`, tests in `test/`, build icon in `build/`).
 - `app/dist/` — built installers: `Offering-Tithe-Program-Setup-*.exe`, `Offering-Tithe-Program-Portable.exe`, `.dmg`/`.zip`, `.AppImage`/`.deb` (see "Packaging & installers").
 - `.github/workflows/build.yml` — CI workflow that builds all three platform installers on a version tag.
 - `.github/workflows/security.yml` — PR/push security scans (secrets, code patterns, dependency audit, CodeQL).
 - `changelog.md` — change log of updates made to the app.
-- `AWC Donor Form.dc.html` — original working prototype (reference only).
 - `schema.sql` — reference SQL schema.
-- `design_handoff_electron_donor_app/` — design/handoff documentation used to build the app.
 - `overall_licensing/` — license documents and third-party notices.
 
 ## License

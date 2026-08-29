@@ -6,7 +6,7 @@ const path = require('path');
 const Database = require('better-sqlite3');
 const db = require('../db');
 
-const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'awc-migrate-test-'));
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'otm-migrate-test-'));
 const dbPath = path.join(dir, 'legacy.db');
 
 // 1. Build a legacy DB with the OLD schema/tables exactly as v1 shipped.

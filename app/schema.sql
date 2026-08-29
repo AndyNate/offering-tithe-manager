@@ -1,4 +1,4 @@
--- AWC donor app — SQLite schema
+-- Donor app — SQLite schema
 -- Money is stored as INTEGER cents (divide by 100 in the renderer).
 -- Dates are stored as 'YYYY-MM-DD' TEXT so strftime() report queries work.
 

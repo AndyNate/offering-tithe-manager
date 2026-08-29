@@ -36,11 +36,6 @@ open-source their own changes.
 
 The `LICENSE-OPTIONS.md` template is retained for reference.
 
-**One caveat:** the original browser prototype (`design_handoff_electron_donor_app/`)
-came from a design-tool handoff. If that tool's terms impose conditions on
-exports, they would cover the prototype files only — the desktop app code above
-was written fresh for this project.
-
 ## 2. Third-party components — free to use, small obligations
 
 The app bundles open-source software. **None of it restricts you from selling,

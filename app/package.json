@@ -24,7 +24,7 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "ca.awc.offering-tithe",
+    "appId": "com.offeringtithe.manager",
     "files": [
       "main.js",
       "preload.js",

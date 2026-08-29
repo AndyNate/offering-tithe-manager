@@ -10,7 +10,7 @@ let authed = false;
 let currentDbPath = null;
 
 // --- database file selection -------------------------------------------------
-// Priority: --db CLI argument > AWC_DB_PATH env var > remembered choice
+// Priority: --db CLI argument > OTM_DB_PATH env var > remembered choice
 // (db-choice.json in userData) > default location.
 
 function dbChoiceFile() {
@@ -41,7 +41,7 @@ function resolveDbPath() {
     else if (a === '--db' && process.argv[i + 1]) fromArg = process.argv[i + 1].trim();
   }
   if (fromArg === 'default') fromArg = null; // escape hatch: --db=default forces the default file
-  return fromArg || process.env.AWC_DB_PATH || readDbChoice() || defaultDbPath();
+  return fromArg || process.env.OTM_DB_PATH || readDbChoice() || defaultDbPath();
 }
 
 // Packaged Windows apps keep their database in a "data" folder next to the

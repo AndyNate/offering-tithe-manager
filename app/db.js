@@ -45,7 +45,7 @@ function init(dbPath) {
 
   migrateGivingOnline();
 
-  // Seed settings defaults (password hash of the handoff default; changeable in-app later)
+  // Seed settings defaults (default password; changeable in-app later)
   const seed = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
   seed.run('admin_password_hash', sha256(DEFAULT_PASSWORD));
   seed.run('org_name', 'OTMP');
