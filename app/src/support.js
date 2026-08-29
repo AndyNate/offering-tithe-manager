@@ -564,7 +564,7 @@
     const key = (ctx?.__name || "?") + "\0" + what;
     if (warnedHoles.has(key)) return;
     warnedHoles.add(key);
-    console.warn("[dc-runtime]", ctx?.__name || "template", ":", what);
+    console.warn("[dc-runtime] " + (ctx?.__name || "template") + ": " + what);
   }
   function walkText(node) {
     const txt = node.nodeValue ?? "";
@@ -930,7 +930,7 @@
       }
       componentDidCatch(e, info) {
         console.error(
-          "[dc-runtime] render error in <", this.__name, ">:",
+          "[dc-runtime] render error in <" + this.__name + ">:",
           e,
           info?.componentStack || ""
         );
@@ -1195,7 +1195,7 @@
       const existing = pending.get(url);
       if (existing) return existing;
       cache.set(url, null);
-      console.info("[dc-runtime] x-import: loading", url, kind);
+      console.info("[dc-runtime] x-import: loading", url, "(" + kind + ")");
       const ready = Promise.all([
         kind === "jsx" ? ensureBabel() : Promise.resolve(),
         after ?? Promise.resolve()
@@ -1651,7 +1651,7 @@
       (blob ? blob.text() : fetch(target).then((res2) => {
         if (!res2.ok) {
           console.error(
-            '[dc-runtime] sibling fetch for "', name, '" failed:',
+            '[dc-runtime] sibling fetch for "' + name + '" failed:',
             url,
             "returned",
             res2.status,
@@ -1665,7 +1665,7 @@
         const parsed = parseDcText(t);
         if (!parsed) {
           console.error(
-            '[dc-runtime] sibling fetch for "', name, '":',
+            '[dc-runtime] sibling fetch for "' + name + '":',
             url,
             "has no <x-dc> block \u2014 not a Design Component."
           );
@@ -1677,7 +1677,7 @@
         if (parsed.js && !r.Logic) updateJs(name, parsed.js);
       }).catch(
         (e) => console.error(
-          '[dc-runtime] sibling fetch for "', name, '" threw:',
+          '[dc-runtime] sibling fetch for "' + name + '" threw:',
           url,
           e
         )

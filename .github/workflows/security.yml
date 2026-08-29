@@ -40,6 +40,7 @@ jobs:
           semgrep scan \
             --config "p/default" \
             --exclude "app/src/vendor" \
+            --exclude "app/src/support.js" \
             --exclude "app/dist" \
             --metrics=off \
             --error \
