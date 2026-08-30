@@ -18,6 +18,7 @@ Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored l
 - [Download](#download)
 - [Give (entry) form](#give-entry-form)
 - [Admin panel](#admin-panel)
+- [Emails (deposit reports)](#emails-deposit-reports)
 - [Data storage](#data-storage)
 - [Database](#database)
 - [Development](#development)
@@ -77,12 +78,24 @@ Opened from the **Admin** tab with the password (`admin` — **change it from th
 
 - **Export / Import (CSV)**: export the donors and giving tables to Excel-compatible CSV; import either back, validating required columns before anything is written.
 - **Search / edit donor**: fields for Tithe ID, Full name, Spouse, Email, Notes, Registration date with **Find donor** (by ID/name/email), **Newest entry**, **Edit**, **Add donor** (auto-assigns the lowest free Tithe ID), **Delete donor** (asks for confirmation first), and **Clear**.
-- **Deposits**: a "New deposit" flow recording deposit number, date, teller names, cash/cheques subtotals, tithe-sheet totals, and per-denomination counts (with a printable/count sheet template, `deposit-template.xlsx`). The New deposit dialog fits on screen without scrolling and is click-to-save only (the Enter key never submits it). Deposit reports can optionally be emailed via the Brevo API (API key and sender address configured in-app); recipients can be managed in settings. Deposits can be recorded without signing in as admin — non-admins get an auto-generated read-only deposit number and today's date; admins can edit the deposit number, send report emails, and delete deposits.
+- **Deposits**: a "New deposit" flow recording deposit number, date, teller names, cash/cheques subtotals, tithe-sheet totals, and per-denomination counts (with a printable/count sheet template, `deposit-template.xlsx`). The New deposit dialog fits on screen without scrolling and is click-to-save only (the Enter key never submits it). Deposits can be recorded without signing in as admin — non-admins get an auto-generated read-only deposit number and today's date; admins can edit the deposit number, send report emails, and delete deposits (see [Emails (deposit reports)](#emails-deposit-reports)).
 - **Deposits table**: searchable by deposit # or date.
 - **Month-end report**: month/year picker with Cash/Cheque, E-Transfer, Online and grand totals, plus an "Other donations report" listing each noted donation (any fund — Regular/Mission/Building fund/Other) with its amount breakdown and the entered note.
 - **Fund totals**: Regular/Mission/Building fund/Other totals for the selected month and year.
 - **Year-end report**: each donor's Tithe ID, name, spouse, and total donated that year, with an **Export .csv** button that downloads the report as `year-end-report-<year>.csv`.
 - **Donations table**: searchable by name or Tithe ID — date, Tithe ID, name (with a "New" badge for first-time donors), amount, method, fee, notes, and per-row Delete.
+
+## Emails (deposit reports)
+
+Deposit report emails are sent through **Brevo's transactional email API** (`https://api.brevo.com/v3/smtp/email`) directly from the app's main process — no SMTP, no separate email app. Each email is a plain-text deposit slip (subject `Deposit <number> — $<total>`) with the deposit number, date, and total.
+
+- **Setup** — Admin → Settings: add a **Brevo API key** and a **sender email address** under "Email settings (Brevo)", then add recipient addresses under "Email recipients" (deduped case-insensitively; e.g. a treasurer's and a secretary's address).
+- **When it sends** — emailing is the **default for every deposit**: non-admin volunteers always send, and admins can opt a single deposit out by unchecking **"Send email?"**. The deposit is **always saved first** — if the email fails, the record is kept and you can retry later.
+- **Status & retry** — the Deposits list marks each deposit **Emailed** or **Not sent**; admin can click **Email** on any deposit to send or resend it.
+- **Failures** — clear messages for a missing API key/sender/recipients, no internet connection, a bad API key (401/403), Brevo being down (5xx), or other errors. The deposit itself survives every failure.
+- **Security** — sending works for every session, but the raw **Brevo API key is only ever shown to an authenticated admin** (read internally in the main process, never logged). See [Security notes](#security-notes).
+
+Brevo use is governed by Brevo's Terms of Service and your account plan — see [`overall_licensing/`](overall_licensing/).
 
 ## Data storage
 - Money is stored internally as integer cents; all amounts are displayed formatted.
