@@ -10,7 +10,7 @@ Built for churches and small organizations that want an **offline, no-subscripti
 
 Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
 
-> **AI-assisted development:** this program was developed with the assistance of AI tooling.
+> **AI-assisted development:** this program was made with AI tooling.
 
 ## Table of Contents
 
