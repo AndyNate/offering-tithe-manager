@@ -65,9 +65,7 @@ work that way.
 
 ### Things that are NOT code licenses (but worth knowing)
 
-- **Brevo email service**: sending deposit emails uses Brevo's API. That
-  relationship is governed by Brevo's Terms of Service and your account plan —
-  separate from any software licensing.
+- **Brevo email service**: the app sends deposit emails through Brevo's API, a third-party service you integrate with using your own Brevo account and API key (no affiliation or endorsement). That relationship is governed by Brevo's [Terms of Service](https://www.brevo.com/legal/termsofuse/) and your account plan — separate from any software licensing.
 - **Trademarks**: the names "Electron", "React", etc. are trademarks of their
   owners. Describing your app as "built with Electron" is fine; naming your own
   product after them is not.

@@ -95,7 +95,7 @@ Deposit report emails are sent through **Brevo's transactional email API** (`htt
 - **Failures** — clear messages for a missing API key/sender/recipients, no internet connection, a bad API key (401/403), Brevo being down (5xx), or other errors. The deposit itself survives every failure.
 - **Security** — sending works for every session, but the raw **Brevo API key is only ever shown to an authenticated admin** (read internally in the main process, never logged). See [Security notes](#security-notes).
 
-Brevo use is governed by Brevo's Terms of Service and your account plan — see [`overall_licensing/`](overall_licensing/).
+Sending deposit emails uses the **Brevo** API (a third-party service — not affiliated with or endorsed by Brevo). You'll need your own [Brevo account](https://www.brevo.com) and an **API key**, entered under Admin → Settings. Brevo use is governed by Brevo's [Terms of Service](https://www.brevo.com/legal/termsofuse/) and your account plan — see [`overall_licensing/`](overall_licensing/).
 
 ## Data storage
 - Money is stored internally as integer cents; all amounts are displayed formatted.
