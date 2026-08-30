@@ -182,6 +182,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 
 ## Files
 - `app/` — the Electron application (main process `main.js`, database layer `db.js`, preload bridge `preload.js`, UI in `src/index.html` + `src/support.js`, tests in `test/`, build icon in `build/`).
+- `app/src/_ds-modernist/` — the app's visual styling: design-system tokens and component classes in `styles.css`, loaded by `src/index.html`. AI-generated from the "Modernist" design system, a licensed style reference the project uses (original work, not derived from any product), and shipped as a self-contained vendored bundle (like `app/src/vendor/react*.js`).
 - `app/dist/` — built installers: `Offering-Tithe-Program-Setup-*.exe`, `Offering-Tithe-Program-Portable.exe`, `.dmg`/`.zip`, `.AppImage`/`.deb` (see "Packaging & installers").
 - `.github/workflows/build.yml` — CI workflow that builds all three platform installers on a version tag.
 - `.github/workflows/security.yml` — PR/push security scans (secrets, code patterns, dependency audit, CodeQL).
