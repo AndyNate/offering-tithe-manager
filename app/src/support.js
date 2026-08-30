@@ -1,4 +1,7 @@
-// GENERATED from dc-runtime/src/*.ts — do not edit. Rebuild with `cd dc-runtime && bun run build`.
+// Vendored build of the dc-runtime renderer runtime. The dc-runtime generator
+// source is NOT part of this repository, so there is no rebuild step available
+// here - treat this file as a committed source file and edit it directly when
+// you need to change its behavior.
 "use strict";
 (() => {
   var __defProp = Object.defineProperty;
@@ -114,8 +117,8 @@
     .sc-logic-error{position:absolute;top:8px;left:8px;z-index:2147483647;max-width:60ch;
       padding:6px 10px;background:#b00020;color:#fff;font:12px/1.4 ui-monospace,monospace;
       border-radius:4px;white-space:pre-wrap;pointer-events:none}
-    /* Mirrors PRINT_BASELINE_CSS in apps/web deck-stage-export.ts \u2014 keep both
-       in sync until dc-runtime regains a build step. */
+    /* Mirrors PRINT_BASELINE_CSS in the deck-stage-export baseline - keep the
+       two in sync (no rebuild step exists in this repo). */
     @media print {
       @page { margin: 0.5cm; }
       figure, table { break-inside: avoid; }

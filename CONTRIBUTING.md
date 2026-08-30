@@ -24,7 +24,7 @@ npm run dist            # build for the current OS
 - `app/preload.js` — narrow `contextBridge` API exposed to the renderer.
 - `app/db.js` — SQLite data layer (the source of truth for the schema).
 - `app/src/index.html` — the app UI (a template + logic in one file).
-- `app/src/support.js` — generated renderer runtime (rebuild from `dc-runtime`, do not hand-edit).
+- `app/src/support.js` — vendored dc-runtime renderer runtime; its generator source is **not** in this repo, and there is no rebuild step, so edit this file directly when you need changes.
 - `app/test/db.test.js` — database test suite.
 
 ## Before you submit

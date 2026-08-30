@@ -185,7 +185,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 - `app/dist/` — built installers: `Offering-Tithe-Program-Setup-*.exe`, `Offering-Tithe-Program-Portable.exe`, `.dmg`/`.zip`, `.AppImage`/`.deb` (see "Packaging & installers").
 - `.github/workflows/build.yml` — CI workflow that builds all three platform installers on a version tag.
 - `.github/workflows/security.yml` — PR/push security scans (secrets, code patterns, dependency audit, CodeQL).
-- `changelog.md` — change log of updates made to the app.
+- `changelog.md` — the maintainer's working change log; kept locally (git-ignored via `.gitignore`, since it records AI-assisted work) and not part of a cloned checkout.
 - `CONTRIBUTING.md` — how to contribute (dev setup, PR checks); linked from the License section.
 - `docs/DATABASE.md` — full database schema and storage details.
 - `screenshots/` — the eight screenshots shown in the preview table at the top of this README.
