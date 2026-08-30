@@ -235,6 +235,23 @@ t('importGiving auto-creates missing donors to preserve integrity', () => {
   const ivy = db.getDonorByTitheId(3000);
   assert.strictEqual(ivy.fullName, 'Ivy Innis');
 });
+t('importGiving converts dollar CSV values to cents', () => {
+  db.importGiving([
+    { 'Tithe ID': '4000', 'Full name': 'Carol Cards', Date: 'Aug 10, 2026', Method: 'Cash / Cheque', Regular: '87', Mission: '12.5', 'Building fund': '0', Other: '1.25', Notes: '', 'Online fee amount': '' },
+    { 'Tithe ID': '4001', 'Full name': 'Pete Pence', Date: 'Aug 11, 2026', Method: 'Online', Regular: '10', Mission: '', 'Building fund': '', Other: '', Notes: '', 'Online fee amount': '0.3' },
+  ]);
+  let gifts = db.listGiving().filter((g) => String(g.titheId) === '4000');
+  assert.strictEqual(gifts.length, 1);
+  assert.strictEqual(gifts[0].regular, 8700);
+  assert.strictEqual(gifts[0].mission, 1250);
+  assert.strictEqual(gifts[0].buildingFund, 0);
+  assert.strictEqual(gifts[0].other, 125);
+  gifts = db.listGiving().filter((g) => String(g.titheId) === '4001');
+  assert.strictEqual(gifts.length, 1);
+  assert.strictEqual(gifts[0].regular, 1000);
+  assert.strictEqual(gifts[0].isFee, true);
+  assert.strictEqual(gifts[0].onlineFeeAmount, 30);
+});
 
 // ---- tithe ID gap-filling
 t('insertDonor fills the lowest gaps left by deleted donors', () => {

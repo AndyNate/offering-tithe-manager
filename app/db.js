@@ -687,7 +687,7 @@ function importDonors(records) {
 }
 
 function importGiving(records) {
-  const num = (v) => Math.round(parseFloat(v) || 0);
+  const num = (v) => Math.round(parseFloat(v) * 100) || 0;
   const tx = db.transaction((rows) => {
     let inserted = 0;
     for (const r of rows) {
