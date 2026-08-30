@@ -12,16 +12,6 @@ Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored l
 
 > **AI-assisted development:** this program was developed with the assistance of AI tooling.
 
-## Download
-
-**Download the latest release → [github.com/AndyNate/offering-tithe-manager/releases/latest](https://github.com/AndyNate/offering-tithe-manager/releases/latest)** (all installers for Windows, macOS, and Linux). Quick pick:
-
-- **Windows** — `Offering-Tithe-Program-Setup-<version>.exe` (installer) or `Offering-Tithe-Program-Portable.exe` (no-install, runs from a folder or USB stick).
-- **macOS** — `Offering-Tithe-Program-<version>-arm64.dmg` for Apple Silicon (M1/M2/M3), `...-x64.dmg` for Intel Macs.
-- **Linux** — `offering-tithe-program-<version>-amd64.deb` on Debian/Ubuntu/Mint; `...-x86_64.AppImage` on most other distros.
-
-All builds are the same app — for the full guide and unsigned-build first-run warnings, see ["Which release file should I download?"](#which-release-file-should-i-download).
-
 ## Table of Contents
 
 - [Screenshots](#screenshots)
@@ -62,6 +52,16 @@ All builds are the same app — for the full guide and unsigned-build first-run 
     </tr>
   </table>
 </p>
+
+## Download
+
+**Download the latest release → [github.com/AndyNate/offering-tithe-manager/releases/latest](https://github.com/AndyNate/offering-tithe-manager/releases/latest)** (all installers for Windows, macOS, and Linux). Quick pick:
+
+- **Windows** — `Offering-Tithe-Program-Setup-<version>.exe` (installer) or `Offering-Tithe-Program-Portable.exe` (no-install, runs from a folder or USB stick).
+- **macOS** — `Offering-Tithe-Program-<version>-arm64.dmg` for Apple Silicon (M1/M2/M3), `...-x64.dmg` for Intel Macs.
+- **Linux** — `offering-tithe-program-<version>-amd64.deb` on Debian/Ubuntu/Mint; `...-x86_64.AppImage` on most other distros.
+
+All builds are the same app — for the full guide and unsigned-build first-run warnings, see ["Which release file should I download?"](#which-release-file-should-i-download).
 
 ## Give (entry) form
 - Single **Full name or Tithe ID** field — matched against the donors table; unmatched names auto-create a donor with the lowest unused Tithe ID (starting at `1`, so numbers freed by deleted donors are reused); an unmatched numeric input errors with "Tithe ID doesn't exist."
