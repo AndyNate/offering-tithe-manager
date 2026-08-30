@@ -186,7 +186,10 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 - `.github/workflows/build.yml` — CI workflow that builds all three platform installers on a version tag.
 - `.github/workflows/security.yml` — PR/push security scans (secrets, code patterns, dependency audit, CodeQL).
 - `changelog.md` — change log of updates made to the app.
+- `CONTRIBUTING.md` — how to contribute (dev setup, PR checks); linked from the License section.
 - `docs/DATABASE.md` — full database schema and storage details.
+- `screenshots/` — the eight screenshots shown in the preview table at the top of this README.
+- `SECURITY.md` — security policy; how to report a vulnerability.
 - `app/schema.sql` — SQLite DDL executed by `app/db.js` when a fresh database is created; `db.js` remains the behavioral source of truth (all migrations live there).
 - `overall_licensing/` — license documents and third-party notices.
 
