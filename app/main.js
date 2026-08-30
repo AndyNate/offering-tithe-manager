@@ -118,6 +118,10 @@ handle('auth:changePassword', ({ currentPassword, newPassword, confirmation }) =
   db.changePassword(currentPassword, newPassword, confirmation);
   return { ok: true };
 });
+handle('auth:isDefaultPassword', () => {
+  requireAdmin();
+  return { defaultPassword: db.isDefaultPassword() };
+});
 
 // donors
 handle('donors:list', () => db.listDonors());

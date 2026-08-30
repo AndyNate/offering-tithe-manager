@@ -14,7 +14,7 @@ Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored l
 
 ## Download
 
-Get the latest installers from the [Releases page](https://github.com/AndyNate/offering-tithe-manager/releases). Quick pick:
+**Download the latest release → [github.com/AndyNate/offering-tithe-manager/releases/latest](https://github.com/AndyNate/offering-tithe-manager/releases/latest)** (all installers for Windows, macOS, and Linux). Quick pick:
 
 - **Windows** — `Offering-Tithe-Program-Setup-<version>.exe` (installer) or `Offering-Tithe-Program-Portable.exe` (no-install, runs from a folder or USB stick).
 - **macOS** — `Offering-Tithe-Program-<version>-arm64.dmg` for Apple Silicon (M1/M2/M3), `...-x64.dmg` for Intel Macs.
@@ -98,7 +98,7 @@ Everything lives in a single self-contained SQLite file (`offering-tithe.db`) �
 
 ## Development
 
-Prerequisites: [Node.js](https://nodejs.org) (LTS) on Windows, macOS, or Linux. `better-sqlite3` is rebuilt for Electron automatically on install.
+Prerequisites: [Node.js](https://nodejs.org) **20 or newer** (Node 20 LTS is what the CI workflow uses) on Windows, macOS, or Linux. `better-sqlite3` is rebuilt for Electron automatically on install.
 
 ### Build from source, step by step
 
@@ -187,7 +187,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 - `.github/workflows/security.yml` — PR/push security scans (secrets, code patterns, dependency audit, CodeQL).
 - `changelog.md` — change log of updates made to the app.
 - `docs/DATABASE.md` — full database schema and storage details.
-- `schema.sql` — reference SQL schema.
+- `app/schema.sql` — SQLite DDL executed by `app/db.js` when a fresh database is created; `db.js` remains the behavioral source of truth (all migrations live there).
 - `overall_licensing/` — license documents and third-party notices.
 
 ## License

@@ -13,7 +13,8 @@ The live schema (created by `app/db.js`) contains:
 
 ## Notes
 
-- `schema.sql` at the project root is the original prototype-era reference for `donors` and `giving`; `app/db.js` is the source of truth.
+- `app/schema.sql` holds the table DDL and is executed by `app/db.js` when a fresh database is created.
+- `app/db.js` is the behavioral source of truth — schema migrations (e.g. the Tithly → Online giving-method migration) and defaults are applied there at startup.
 - Money is stored as integer cents to avoid floating-point rounding.
 - Dates are kept in local time.
 - All user input goes through SQL parameterized queries.

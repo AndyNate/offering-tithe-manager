@@ -118,6 +118,12 @@ body{margin:0;-webkit-font-smoothing:antialiased}
         </div>
       </div>
 
+      <sc-if value="{{ defaultPasswordWarning }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-bottom:16px;padding:12px 16px;background:color-mix(in srgb, var(--color-accent-700) 10%, transparent);border:1px solid var(--color-accent);border-radius:var(--radius-md);font-size:13px">
+          <strong>Security notice:</strong> you are signed in with the default password (<code>admin</code>). Change it now via the <strong>Change password</strong> button above.
+        </div>
+      </sc-if>
+
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         <div onClick="{{ exportDonations }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider)">Export giving (CSV)</div>
         <div onClick="{{ exportDonors }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider)">Export donors (CSV)</div>
@@ -838,7 +844,7 @@ class Component extends DCLogic {
     donors: [],
     name: '', regular: '', mission: '', buildingFund: '', other: '', method: 'Cash / Cheque', onlineFee: '', notes: '',
     search: '', error: '',
-    adminAuthed: false, showPasswordModal: false, passwordInput: '', passwordError: '',
+    adminAuthed: false, defaultPasswordWarning: false, showPasswordModal: false, passwordInput: '', passwordError: '',
     showChangePasswordModal: false, currentPasswordInput: '', newPasswordInput: '', confirmPasswordInput: '', changePasswordError: '',
     toastText: '', toastVisible: false,
     reportMonth: new Date().getMonth() + 1, reportYear: new Date().getFullYear(),
@@ -922,6 +928,7 @@ class Component extends DCLogic {
       if (status && status.authed) {
         this.setState({ adminAuthed: true });
         await this.loadAdminData();
+        try { await this.refreshDefaultPasswordWarning(); } catch (e) {}
         try { this.checkUnsentDeposits(await window.db.listDeposits()); } catch (e) {}
       } else {
         // Non-admin sessions still need the email config so deposit emails can be attempted.
@@ -1013,6 +1020,7 @@ class Component extends DCLogic {
       await window.db.login(s.passwordInput);
       this.setState({ adminAuthed: true, showPasswordModal: false, view: 'admin' });
       await this.loadAdminData();
+      try { await this.refreshDefaultPasswordWarning(); } catch (e) {}
       try { this.checkUnsentDeposits(await window.db.listDeposits()); } catch (e) {}
     } catch (err) {
       this.setState({ passwordError: this.errMessage(err) });
@@ -1029,6 +1037,11 @@ class Component extends DCLogic {
     showChangePasswordModal: true, currentPasswordInput: '', newPasswordInput: '', confirmPasswordInput: '', changePasswordError: '',
   });
 
+  refreshDefaultPasswordWarning = async () => {
+    const res = await window.db.isDefaultPassword();
+    this.setState({ defaultPasswordWarning: !!(res && res.defaultPassword) });
+  };
+
   submitChangePassword = async (e) => {
     e.preventDefault();
     const s = this.state;
@@ -1038,6 +1051,7 @@ class Component extends DCLogic {
         showChangePasswordModal: false, currentPasswordInput: '', newPasswordInput: '', confirmPasswordInput: '', changePasswordError: '',
       });
       this.notify('Password changed successfully.');
+      this.setState({ defaultPasswordWarning: false });
     } catch (err) {
       this.setState({ changePasswordError: this.errMessage(err) });
     }
@@ -1050,7 +1064,7 @@ class Component extends DCLogic {
   logoutAdmin = () => {
     window.db.logout();
     this.setState({
-      adminAuthed: false, view: 'form', giveDate: '', method: 'Cash / Cheque', onlineFee: '',
+      adminAuthed: false, defaultPasswordWarning: false, view: 'form', giveDate: '', method: 'Cash / Cheque', onlineFee: '',
       donations: [], donors: [], deposits: [],
       emailRecipients: [], newRecipientEmail: '',
       brevoApiKey: '', brevoSenderEmail: '', emailSettingsNotice: '',
@@ -2074,6 +2088,7 @@ class Component extends DCLogic {
       methodUnlocked: s.adminAuthed,
       methodLocked: !s.adminAuthed,
       adminAuthed: s.adminAuthed,
+      defaultPasswordWarning: s.defaultPasswordWarning,
       giveDate: s.giveDate,
       setGiveDate: this.setGiveDate,
       methodIsOnline: s.method === 'Online',

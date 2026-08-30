@@ -5,7 +5,7 @@ the MIT license — see `LICENSE` at the project root.
 
 ## Getting started
 
-Prerequisites: [Node.js](https://nodejs.org) (LTS) on Windows, macOS, or Linux.
+Prerequisites: [Node.js](https://nodejs.org) **20 or newer** (LTS) on Windows, macOS, or Linux.
 
 ```sh
 cd app

@@ -25,6 +25,13 @@ t('default password verifies', () => {
   assert.strictEqual(db.verifyPassword('admin'), true);
   assert.strictEqual(db.verifyPassword('wrong'), false);
 });
+t('isDefaultPassword detects the shipped default', () => {
+  assert.strictEqual(db.isDefaultPassword(), true, 'fresh DB still uses the admin default');
+  db.setPassword('s3cret');
+  assert.strictEqual(db.isDefaultPassword(), false);
+  db.setPassword('admin');
+  assert.strictEqual(db.isDefaultPassword(), true);
+});
 t('password change persists', () => {
   db.setPassword('newpass');
   assert.strictEqual(db.verifyPassword('newpass'), true);

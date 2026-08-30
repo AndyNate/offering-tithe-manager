@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('db', {
   login: (password) => ipcRenderer.invoke('auth:login', { password }),
   logout: () => ipcRenderer.invoke('auth:logout'),
   changePassword: (currentPassword, newPassword, confirmation) => ipcRenderer.invoke('auth:changePassword', { currentPassword, newPassword, confirmation }),
+  isDefaultPassword: () => ipcRenderer.invoke('auth:isDefaultPassword'),
 
   // donors
   listDonors: () => ipcRenderer.invoke('donors:list'),

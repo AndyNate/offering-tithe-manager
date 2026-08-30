@@ -169,6 +169,10 @@ function changePassword(currentPassword, newPassword, confirmation) {
   setPassword(newPassword);
 }
 
+function isDefaultPassword() {
+  return verifyPassword(DEFAULT_PASSWORD);
+}
+
 // ---------------------------------------------------------------------------
 // Donors
 
@@ -748,7 +752,7 @@ function backupTo(destPath) {
 module.exports = {
   init, close, AppError, todayStr, isValidDateStr,
   getSetting, setSetting, getEmailRecipients, setEmailRecipients,
-  verifyPassword, setPassword, changePassword,
+  verifyPassword, setPassword, changePassword, isDefaultPassword,
   listDonors, findDonors, getDonorByTitheId, insertDonor, updateDonor, deleteDonor,
   newestEntryDonor, findDonorExact,
   listGiving, getGift, deleteGiving, recordGift, updateGiving,

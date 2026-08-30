@@ -9,6 +9,9 @@
   },
   "main": "main.js",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/AndyNate/offering-tithe-manager.git"
