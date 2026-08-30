@@ -1,14 +1,31 @@
 # Offering & Tithe Management Program
 
-A cross-platform desktop application (Windows, macOS, Linux) for offering/tithe recording: volunteers enter donations through a simple **Give** form, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://github.com/AndyNate/offering-tithe-manager/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/AndyNate/offering-tithe-manager"></a>
+  <a href="https://github.com/AndyNate/offering-tithe-manager/actions/workflows/build.yml"><img alt="Build status" src="https://github.com/AndyNate/offering-tithe-manager/actions/workflows/build.yml/badge.svg"></a>
+</p>
+
+Built for churches and small organizations that want an **offline, no-subscription** way to track offerings and tithes — no account, no setup fees, and nothing leaves your own machine. A cross-platform desktop application (Windows, macOS, Linux) for offering/tithe recording: volunteers enter donations through a simple **Give** form, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
 
 Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
 
 > **AI-assisted development:** this program was developed with the assistance of AI tooling.
 
+## Download
+
+Get the latest installers from the [Releases page](https://github.com/AndyNate/offering-tithe-manager/releases). Quick pick:
+
+- **Windows** — `Offering-Tithe-Program-Setup-<version>.exe` (installer) or `Offering-Tithe-Program-Portable.exe` (no-install, runs from a folder or USB stick).
+- **macOS** — `Offering-Tithe-Program-<version>-arm64.dmg` for Apple Silicon (M1/M2/M3), `...-x64.dmg` for Intel Macs.
+- **Linux** — `offering-tithe-program-<version>-amd64.deb` on Debian/Ubuntu/Mint; `...-x86_64.AppImage` on most other distros.
+
+All builds are the same app — for the full guide and unsigned-build first-run warnings, see ["Which release file should I download?"](#which-release-file-should-i-download).
+
 ## Table of Contents
 
 - [Screenshots](#screenshots)
+- [Download](#download)
 - [Give (entry) form](#give-entry-form)
 - [Admin panel](#admin-panel)
 - [Data storage](#data-storage)
@@ -56,7 +73,7 @@ Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored l
 - On **Submit** the gift is saved and the form immediately resets with empty fields, ready for the next entry (no confirmation screen).
 
 ## Admin panel
-Opened from the **Admin** tab with the password (`admin`); **Log out** returns to the Give view and resets admin-only state.
+Opened from the **Admin** tab with the password (`admin` — **change it from the Admin panel after first use**); **Log out** returns to the Give view and resets admin-only state.
 
 - **Export / Import (CSV)**: export the donors and giving tables to Excel-compatible CSV; import either back, validating required columns before anything is written.
 - **Search / edit donor**: fields for Tithe ID, Full name, Spouse, Email, Notes, Registration date with **Find donor** (by ID/name/email), **Newest entry**, **Edit**, **Add donor** (auto-assigns the lowest free Tithe ID), **Delete donor** (asks for confirmation first), and **Clear**.
@@ -76,13 +93,8 @@ Opened from the **Admin** tab with the password (`admin`); **Log out** returns t
 - When installing a newer Windows build into a fresh portable folder, **copy your existing `data\offering-tithe.db` into the new folder's `data\` directory** to keep your records.
 
 ## Database
-The live schema (created by `app/db.js`) contains:
-- `donors`: `tithe_id` (PK, sequential), `date`, `full_name`, `spouse`, `email`, `notes`, `is_new_entry`.
-- `giving`: `id` (PK), `tithe_id` (FK), `date`, `giving_type`, `regular`, `mission`, `building_fund`, `other`, `total_amount` (generated), `note`, `is_fee`, `online_fee_amount`, `created_donor`.
-- `deposits`: `deposit_number` (unique), `date`, `teller1`, `teller2`, `cash_subtotal`, `cheques_subtotal`, `total`, `tithe_sheet_total`, `counts_json`, `cheques_json`, `emailed_to`.
-- `settings`: key/value store (sha256-hashed admin password, Brevo API key/sender).
 
-(`schema.sql` at the project root is the original prototype-era reference for `donors` and `giving`; `app/db.js` is the source of truth.)
+Everything lives in a single self-contained SQLite file (`offering-tithe.db`) — donors, giving entries, deposits, and settings (including the hashed admin password and Brevo email config). Money is stored as integer cents. The full schema is documented in [docs/DATABASE.md](docs/DATABASE.md).
 
 ## Development
 
@@ -159,14 +171,7 @@ Pushing a version tag (e.g. `git tag v1.1.0 && git push origin v1.1.0`) triggers
 
 ### Pull request security scans
 
-`.github/workflows/security.yml` runs on every pull request and push to `main`/`master`:
-
-| Check | What it does | Blocks the PR on |
-|---|---|---|
-| Secrets (gitleaks) | scans the diff/history for hardcoded API keys, passwords, tokens | any finding |
-| Code scan (Semgrep) | scans for suspicious/vulnerable patterns (hardcoded credentials, unsafe `eval`, potential exfiltration) | any finding |
-| Dependency audit (npm) | `npm audit` against production dependencies | high/critical vulnerabilities |
-| CodeQL | GitHub's static analysis; results appear in the Security tab (report-only until code scanning is enforced) | no (reports only) |
+Every pull request runs automated security scans (secrets, code patterns, dependency audit, CodeQL) before changes are merged. See the full table in [CONTRIBUTING.md](CONTRIBUTING.md#security-scans).
 
 ## Security notes
 
@@ -181,6 +186,7 @@ Pushing a version tag (e.g. `git tag v1.1.0 && git push origin v1.1.0`) triggers
 - `.github/workflows/build.yml` — CI workflow that builds all three platform installers on a version tag.
 - `.github/workflows/security.yml` — PR/push security scans (secrets, code patterns, dependency audit, CodeQL).
 - `changelog.md` — change log of updates made to the app.
+- `docs/DATABASE.md` — full database schema and storage details.
 - `schema.sql` — reference SQL schema.
 - `overall_licensing/` — license documents and third-party notices.
 

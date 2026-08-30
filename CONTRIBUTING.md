@@ -38,6 +38,17 @@ npm run dist            # build for the current OS
 - Preserve the existing behavior: money is stored as integer cents, dates are
   kept in local time, and all user input goes through SQL parameterized queries.
 
+## Security scans
+
+`.github/workflows/security.yml` runs on every pull request and push to `main`/`master`:
+
+| Check | What it does | Blocks the PR on |
+|---|---|---|
+| Secrets (gitleaks) | scans the diff/history for hardcoded API keys, passwords, tokens | any finding |
+| Code scan (Semgrep) | scans for suspicious/vulnerable patterns (hardcoded credentials, unsafe `eval`, potential exfiltration) | any finding |
+| Dependency audit (npm) | `npm audit` against production dependencies | high/critical vulnerabilities |
+| CodeQL | GitHub's static analysis; results appear in the Security tab (report-only until code scanning is enforced) | no (reports only) |
+
 ## License note
 
 By contributing, you agree that your contributions are licensed under the same
