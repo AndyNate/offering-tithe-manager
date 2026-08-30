@@ -53,10 +53,15 @@ Summary of your rights per license type:
 
 ### The one ongoing obligation
 
-When you share the packaged app (`Offering-Tithe-Program-Portable.exe` or the zip),
-include this folder or at least `THIRD-PARTY-NOTICES.md` + the `licenses/`
-texts. That satisfies every attribution condition in one step. There is no
-requirement to open-source your own code — MIT does not work that way.
+Every packaged build (`.exe`, `.dmg`, `.zip`, `.deb`, AppImage) now ships this
+whole folder automatically — look for `overall-licensing` inside the app's
+`resources` directory (macOS: `Offering & Tithe Management Program.app/Contents/Resources`).
+That satisfies every attribution condition in one step.
+
+If you share a raw file outside a build (e.g. email just the `.exe` to someone),
+include this folder or at least `THIRD-PARTY-NOTICES.md` + the `licenses/` texts
+alongside it. There is no requirement to open-source your own code — MIT does not
+work that way.
 
 ### Things that are NOT code licenses (but worth knowing)
 

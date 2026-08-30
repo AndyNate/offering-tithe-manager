@@ -37,6 +37,12 @@
   "build": {
     "appId": "com.offeringtithe.manager",
     "publish": null,
+    "extraResources": [
+      {
+        "from": "../overall_licensing",
+        "to": "overall-licensing"
+      }
+    ],
     "files": [
       "main.js",
       "preload.js",
