@@ -125,7 +125,6 @@ Prerequisites: [Node.js](https://nodejs.org) (LTS) on Windows, macOS, or Linux. 
    ```sh
    npx electron-builder --win --dir   # -> app/dist/win-unpacked/
    ```
-7. **Versioning / CI builds** — the version is read from `app/package.json`; pushing a version tag triggers the GitHub Actions release build (see "Automated builds (GitHub Actions)" below).
 
 ## Packaging & installers
 
