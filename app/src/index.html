@@ -459,19 +459,19 @@ body{margin:0;-webkit-font-smoothing:antialiased}
 
         <sc-if value="{{ showOtherReport }}" hint-placeholder-val="{{ false }}">
           <div style="margin-top:16px">
-            <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-bottom:8px">Total other: {{ otherTotalStr }}</div>
+            <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-bottom:8px">Total: {{ otherTotalStr }}</div>
             <sc-if value="{{ hasOtherNotes }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;flex-direction:column;gap:8px;max-height:482px;overflow-y:auto">
                 <sc-for list="{{ otherNotes }}" as="note" hint-placeholder-count="3">
-                  <div style="display:flex;justify-content:space-between;gap:16px;font-size:14px;padding:10px 12px;background:var(--color-bg)">
+                  <div style="display:flex;flex-direction:column;gap:4px;font-size:14px;padding:10px 12px;background:var(--color-bg)">
                     <span>{{ note.note }}</span>
-                    <span>{{ note.amountStr }}</span>
+                    <span style="font-size:13px;color:color-mix(in srgb, var(--color-text) 65%, transparent)">{{ note.amountsStr }}</span>
                   </div>
                 </sc-for>
               </div>
             </sc-if>
             <sc-if value="{{ noOtherNotes }}" hint-placeholder-val="{{ false }}">
-              <div style="font-size:14px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">No other donations this month.</div>
+              <div style="font-size:14px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">No donations with notes this month.</div>
             </sc-if>
           </div>
         </sc-if>
@@ -1968,7 +1968,14 @@ class Component extends DCLogic {
 
     const ord = s.otherReportData || { entries: [], total: 0 };
     const otherTotal = ord.total || 0;
-    const otherNotes = (ord.entries || []).map(en => ({ note: en.note, amountStr: moneyCents(en.amount) }));
+    const otherNotes = (ord.entries || []).map(en => {
+      const parts = [];
+      if (en.regular) parts.push('Regular ' + moneyCents(en.regular));
+      if (en.mission) parts.push('Mission ' + moneyCents(en.mission));
+      if (en.buildingFund) parts.push('Building fund ' + moneyCents(en.buildingFund));
+      if (en.other) parts.push('Other ' + moneyCents(en.other));
+      return { note: en.note, amountsStr: parts.join('  ·  ') };
+    });
 
     const mf = s.monthlyFunds || {}, yf = s.yearlyFunds || {};
 

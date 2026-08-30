@@ -153,11 +153,24 @@ t('fundTotals sums per fund', () => {
   assert.strictEqual(f.buildingFund, 250);
   assert.strictEqual(f.other, 250);
 });
-t('otherReport lists only other>0 entries with note', () => {
+t('otherReport lists noted donations with fund breakdown', () => {
+  db.recordGift({ name: 'Dawn Donor', regular: 2000, mission: 4020, notes: 'mcathy missionary' }, { isAdmin: true });
+  db.recordGift({ name: 'Zed Quiet', regular: 1000, notes: '' }, { isAdmin: true });
   const o = db.otherReport('2026', '8');
-  assert.strictEqual(o.entries.length, 1);
-  assert.strictEqual(o.entries[0].amount, 250);
-  assert.strictEqual(o.total, 250);
+  const ladies = o.entries.find((e) => e.note === 'ladies event');
+  assert.ok(ladies, 'noted regular/mission/building/other row included');
+  assert.strictEqual(ladies.regular, 4000);
+  assert.strictEqual(ladies.mission, 500);
+  assert.strictEqual(ladies.buildingFund, 250);
+  assert.strictEqual(ladies.other, 250);
+  const mcathy = o.entries.find((e) => e.note === 'mcathy missionary');
+  assert.ok(mcathy, 'noted regular/mission-only row included');
+  assert.strictEqual(mcathy.regular, 2000);
+  assert.strictEqual(mcathy.mission, 4020);
+  assert.strictEqual(mcathy.buildingFund, 0);
+  assert.strictEqual(mcathy.other, 0);
+  assert.strictEqual(o.entries.length, 2, 'rows without notes are excluded');
+  assert.strictEqual(o.total, 4000 + 500 + 250 + 250 + 2000 + 4020);
 });
 t('yearReport includes online fees in donor totals, sorted desc', () => {
   const cara = db.listDonors().find((d) => d.fullName.startsWith('Cara'));

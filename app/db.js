@@ -514,13 +514,21 @@ function yearReport(year, opts = {}) {
 function otherReport(year, month) {
   const y = String(year), m = String(month).padStart(2, '0');
   const rows = db.prepare(
-    `SELECT note, other FROM giving
-     WHERE other > 0 AND strftime('%Y', date) = ? AND strftime('%m', date) = ?
+    `SELECT note, regular, mission, building_fund, other FROM giving
+     WHERE note IS NOT NULL AND TRIM(note) != ''
+       AND strftime('%Y', date) = ? AND strftime('%m', date) = ?
      ORDER BY date, id`
   ).all(y, m);
+  const entries = rows.map((r) => ({
+    note: r.note,
+    regular: r.regular || 0,
+    mission: r.mission || 0,
+    buildingFund: r.building_fund || 0,
+    other: r.other || 0,
+  }));
   return {
-    entries: rows.map((r) => ({ note: r.note || 'No note', amount: r.other })),
-    total: rows.reduce((sum, r) => sum + (r.other || 0), 0),
+    entries,
+    total: entries.reduce((sum, e) => sum + e.regular + e.mission + e.buildingFund + e.other, 0),
   };
 }
 
