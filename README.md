@@ -2,7 +2,7 @@
 
 A cross-platform desktop application (Windows, macOS, Linux) for offering/tithe recording: volunteers enter donations through a simple **Give** form, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
 
-Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
+Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
 
 > **AI-assisted development:** this program was developed with the assistance of AI tooling.
 
@@ -14,6 +14,7 @@ Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored l
 - [Data storage](#data-storage)
 - [Database](#database)
 - [Development](#development)
+  - [Build from source, step by step](#build-from-source-step-by-step)
 - [Packaging & installers](#packaging--installers)
   - [Which release file should I download?](#which-release-file-should-i-download)
   - [Installing unsigned builds](#installing-unsigned-builds)
@@ -87,12 +88,44 @@ The live schema (created by `app/db.js`) contains:
 
 Prerequisites: [Node.js](https://nodejs.org) (LTS) on Windows, macOS, or Linux. `better-sqlite3` is rebuilt for Electron automatically on install.
 
-```sh
-cd app
-npm install          # installs deps + electron-rebuild for better-sqlite3
-npm start            # run the app in dev mode
-npm run test:db      # database test suites (run under electron)
-```
+### Build from source, step by step
+
+1. **Prerequisites** — [Git](https://git-scm.com), [Node.js](https://nodejs.org) **LTS (20 or newer)**, and a C++ toolchain for the native `better-sqlite3` module (Windows: Visual Studio Build Tools; macOS: Xcode Command Line Tools; Linux: `build-essential` and `python3`). A prebuilt binary is usually downloaded automatically, so the toolchain is only needed if the install falls back to compiling from source.
+2. **Clone the repository** and enter the app directory:
+
+   ```sh
+   git clone https://github.com/AndyNate/offering-tithe-manager.git
+   cd offering-tithe-manager/app
+   ```
+3. **Install dependencies** — this also rebuilds `better-sqlite3` for Electron:
+
+   ```sh
+   npm install
+   ```
+4. **Run the app in dev mode** (no packaging):
+
+   ```sh
+   npm start
+   ```
+5. **Run the test suites**:
+
+   ```sh
+   npm run test:db
+   ```
+6. **Build the installers** — each installable build must be produced on its own OS (the `better-sqlite3` native module is compiled per platform); outputs land in `app/dist/` (see "Packaging & installers" below):
+
+   ```sh
+   npm run dist:win    # Windows -> .exe installer + portable
+   npm run dist:mac    # macOS    -> .dmg + .zip (x64 and arm64)
+   npm run dist:linux  # Linux    -> .AppImage + .deb
+   ```
+
+   To make an unpacked app folder instead of installers (e.g. for quick local testing, no setup/portable exe):
+
+   ```sh
+   npx electron-builder --win --dir   # -> app/dist/win-unpacked/
+   ```
+7. **Versioning / CI builds** — the version is read from `app/package.json`; pushing a version tag triggers the GitHub Actions release build (see "Automated builds (GitHub Actions)" below).
 
 ## Packaging & installers
 
