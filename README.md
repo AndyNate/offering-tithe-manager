@@ -6,6 +6,23 @@ Built with **Electron 31** and **better-sqlite3** (React 18 renderer, vendored l
 
 > **AI-assisted development:** this program was developed with the assistance of AI tooling.
 
+## Table of Contents
+
+- [Screenshots](#screenshots)
+- [Give (entry) form](#give-entry-form)
+- [Admin panel](#admin-panel)
+- [Data storage](#data-storage)
+- [Database](#database)
+- [Development](#development)
+- [Packaging & installers](#packaging--installers)
+  - [Which release file should I download?](#which-release-file-should-i-download)
+  - [Installing unsigned builds](#installing-unsigned-builds)
+  - [Automated builds (GitHub Actions)](#automated-builds-github-actions)
+  - [Pull request security scans](#pull-request-security-scans)
+- [Security notes](#security-notes)
+- [Files](#files)
+- [License](#license)
+
 ## Screenshots
 
 <p align="center">
