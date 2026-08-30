@@ -89,6 +89,14 @@ npm run test:db      # database test suites (run under electron)
 
 `npm run dist` builds for whichever OS you are currently on. Installers are unsigned unless code-signing certificates are configured.
 
+### Which release file should I download?
+
+Everyone gets the same app — just pick the right file for your computer:
+
+- **Windows** — use `Offering-Tithe-Program-Setup-<version>.exe` unless you can't or don't want to install: `Offering-Tithe-Program-Portable.exe` runs with no installation (great for a USB stick or locked-down PCs). The portable build keeps its `data\offering-tithe.db` next to the executable, while the installed build uses `%APPDATA%`.
+- **macOS** — match the file to your chip: Intel Macs → `...-x64.dmg`, Apple Silicon (M1/M2/M3) → `...-arm64.dmg` (native; the x64 build also runs under Rosetta). Double-click the `.dmg` and drag the app into Applications; the matching `.zip` is the same app if you prefer it.
+- **Linux** — on Debian/Ubuntu/Mint use `offering-tithe-program-<version>-amd64.deb` (`sudo apt install ./...`); on most other distros use the `x86_64.AppImage` (single portable file, requires `fuse`).
+
 ### Installing unsigned builds
 
 Because the release installers are not code-signed (code-signing certificates cost money), Windows SmartScreen and macOS Gatekeeper show an "unknown publisher / can't be verified" warning on first run. This is expected for an unsigned open-source app — it is not an error, and it typically fades as the app gains download reputation from users who have installed it.
