@@ -29,6 +29,11 @@ _debug_sharedStrings.xml
 _debug_sheet1.xml
 uploads/
 _ds/
+/AWC Donor Form.dc.html
+/design_handoff_electron_donor_app/
+app/src/_ds-modernist/_ds_manifest.json
+app/src/_ds-modernist/readme.md
+app/src/_ds-modernist/_adherence.oxlintrc.json
 /support.js
 /deposit-template.xlsx
 /schema.sql
