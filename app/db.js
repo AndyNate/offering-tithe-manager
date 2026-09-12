@@ -487,6 +487,10 @@ function monthReport(year, month) {
      FROM giving WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?
      GROUP BY giving_type`
   ).all(y, m);
+  const donorRow = db.prepare(
+    `SELECT COUNT(DISTINCT tithe_id) AS n
+     FROM giving WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?`
+  ).get(y, m);
   const byType = { 'Cash / Cheque': 0, 'E-Transfer': 0, Online: 0 };
   for (const r of rows) byType[r.giving_type] = r.t || 0;
   return {
@@ -494,6 +498,7 @@ function monthReport(year, month) {
     eTransfer: byType['E-Transfer'],
     online: byType['Online'],
     grandTotal: Object.values(byType).reduce((a, b) => a + b, 0),
+    totalDonors: donorRow.n || 0,
     counts: Object.fromEntries(rows.map((r) => [r.giving_type, r.n])),
   };
 }

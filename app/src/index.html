@@ -442,7 +442,7 @@ body{margin:0;-webkit-font-smoothing:antialiased}
           </sc-raw-select>
           <input type="number" step="1" value="{{ reportYear }}" onChange="{{ setReportYear }}" style="width:100px;min-height:36px;padding:6px 10px;font:inherit;font-size:14px;color:var(--color-text);background:var(--color-bg);border:1px solid var(--color-divider);border-radius:var(--radius-md)" style-focus="border-color:var(--color-accent);outline:2px solid var(--color-accent);outline-offset:0" />
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px">
           <div style="background:var(--color-bg);padding:16px;display:flex;flex-direction:column;gap:8px">
             <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent)">Cash / Cheque</div>
             <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px">{{ reportCashStr }}</div>
@@ -458,6 +458,10 @@ body{margin:0;-webkit-font-smoothing:antialiased}
           <div style="background:var(--color-bg);padding:16px;display:flex;flex-direction:column;gap:8px">
             <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent)">Grand total</div>
             <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px">{{ reportGrandStr }}</div>
+          </div>
+          <div style="background:var(--color-bg);padding:16px;display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent)">Total donors</div>
+            <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:22px">{{ reportDonorsStr }}</div>
           </div>
         </div>
 
@@ -1068,7 +1072,7 @@ class Component extends DCLogic {
       donations: [], donors: [], deposits: [],
       emailRecipients: [], newRecipientEmail: '',
       brevoApiKey: '', brevoSenderEmail: '', emailSettingsNotice: '',
-      monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0 },
+monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalDonors: 0 },
       otherReportData: { entries: [], total: 0 },
       monthlyFunds: { regular: 0, mission: 0, buildingFund: 0, other: 0 },
       yearlyFunds: { regular: 0, mission: 0, buildingFund: 0, other: 0 },
@@ -1978,7 +1982,7 @@ class Component extends DCLogic {
 
     const mr = s.monthReportData || {};
     const reportCash = mr.cashCheque || 0, reportEtransfer = mr.eTransfer || 0,
-      reportOnline = mr.online || 0, reportGrand = mr.grandTotal || 0;
+      reportOnline = mr.online || 0, reportGrand = mr.grandTotal || 0, reportDonors = mr.totalDonors || 0;
 
     const ord = s.otherReportData || { entries: [], total: 0 };
     const otherTotal = ord.total || 0;
@@ -2120,6 +2124,7 @@ class Component extends DCLogic {
       setReportYear: this.setReportYear,
       reportCashStr: moneyCents(reportCash), reportEtransferStr: moneyCents(reportEtransfer),
       reportOnlineStr: moneyCents(reportOnline), reportGrandStr: moneyCents(reportGrand),
+      reportDonorsStr: String(reportDonors),
       showOtherReport: s.showOtherReport,
       toggleOtherReport: this.toggleOtherReport,
       otherTotalStr: moneyCents(otherTotal),

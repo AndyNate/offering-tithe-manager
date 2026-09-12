@@ -153,6 +153,14 @@ t('monthReport aggregates by method in cents', () => {
   assert.strictEqual(rep.online, 5000);
   assert.strictEqual(rep.grandTotal, 9500 + 3000 + 5000);
 });
+t('monthReport counts unique donors (distinct tithe_id)', () => {
+  const before = db.monthReport('2026', '8').totalDonors;
+  db.recordGift({ name: 'Hank Hill', regular: 1000, date: '2026-08-31' }, { isAdmin: true });
+  db.recordGift({ name: 'hank hill', regular: 2000, date: '2026-08-31' }, { isAdmin: true });
+  db.recordGift({ name: 'Iris Ingram', mission: 500, date: '2026-08-31' }, { isAdmin: true });
+  const rep = db.monthReport('2026', '8');
+  assert.strictEqual(rep.totalDonors, before + 2); // Hank counted once despite two gifts
+});
 t('fundTotals sums per fund', () => {
   const f = db.fundTotals('2026', '8');
   assert.strictEqual(f.regular, 2500 + 1000 + 1000 + 3000 + 5000 + 4000);
