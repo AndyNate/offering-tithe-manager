@@ -23,6 +23,8 @@ body{margin:0;-webkit-font-smoothing:antialiased}
     <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:18px;margin-right:auto">{{ brandName }}</div>
     <div style="{{ giveTabStyle }}" onClick="{{ goForm }}" style-hover="color:var(--color-accent)">Give</div>
     <div style="{{ adminTabStyle }}" onClick="{{ goAdmin }}" style-hover="color:var(--color-accent)">Admin</div>
+    <div style="{{ reportsTabStyle }}" onClick="{{ goReports }}" style-hover="color:var(--color-accent)">Reports</div>
+    <div style="{{ settingsTabStyle }}" onClick="{{ goSettings }}" style-hover="color:var(--color-accent)">Settings</div>
   </div>
 
   <sc-if value="{{ formActive }}" hint-placeholder-val="{{ true }}">
@@ -118,12 +120,6 @@ body{margin:0;-webkit-font-smoothing:antialiased}
         </div>
       </div>
 
-      <sc-if value="{{ defaultPasswordWarning }}" hint-placeholder-val="{{ false }}">
-        <div style="margin-bottom:16px;padding:12px 16px;background:color-mix(in srgb, var(--color-accent-700) 10%, transparent);border:1px solid var(--color-accent);border-radius:var(--radius-md);font-size:13px">
-          <strong>Security notice:</strong> you are signed in with the default password (<code>admin</code>). Change it now via the <strong>Change password</strong> button above.
-        </div>
-      </sc-if>
-
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         <div onClick="{{ exportDonations }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider)">Export giving (CSV)</div>
         <div onClick="{{ exportDonors }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider)">Export donors (CSV)</div>
@@ -139,6 +135,25 @@ body{margin:0;-webkit-font-smoothing:antialiased}
 
       <sc-if value="{{ importMessage }}" hint-placeholder-val="{{ '' }}">
         <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-bottom:24px">{{ importMessage }}</div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ settingsActive }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;width:100%;max-width:1040px;margin:0 auto;padding:48px 24px 80px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
+        <h1 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:32px;margin:0">Settings</h1>
+        <div style="display:flex;gap:10px">
+          <div onClick="{{ backupDatabase }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider);white-space:nowrap">Back up database</div>
+          <div onClick="{{ openChangePassword }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider);white-space:nowrap">Change password</div>
+          <div onClick="{{ logoutAdmin }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider);white-space:nowrap">Log out</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ defaultPasswordWarning }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-bottom:16px;padding:12px 16px;background:color-mix(in srgb, var(--color-accent-700) 10%, transparent);border:1px solid var(--color-accent);border-radius:var(--radius-md);font-size:13px">
+          <strong>Security notice:</strong> you are signed in with the default password (<code>admin</code>). Change it now via the <strong>Change password</strong> button above.
+        </div>
       </sc-if>
 
       <div style="background:var(--color-surface);padding:20px;margin-bottom:32px">
@@ -205,6 +220,43 @@ body{margin:0;-webkit-font-smoothing:antialiased}
         <div style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-top:12px">Switching saves your choice, closes the app, and reopens it on that file. A brand-new file starts empty — use "Back up database" first if you want a copy of the current one.</div>
       </div>
 
+      <div style="background:var(--color-surface);padding:20px;margin-bottom:32px">
+        <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:18px;margin-bottom:16px">Program update</div>
+        <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-bottom:12px">Checks GitHub for a newer build of the program. Updates are installed manually — you keep your database by copying your data folder, then download and install the new build. Current version: {{ currentVersion }}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div onClick="{{ checkForUpdates }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="display:inline-flex;align-items:center;width:fit-content;cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:9px 16px;border:1px solid var(--color-divider)">{{ updateButtonLabel }}</div>
+          <sc-if value="{{ updateAvailable }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ downloadUpdate }}" style-hover="background:var(--color-accent-100)" style="display:inline-flex;align-items:center;width:fit-content;cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;color:var(--color-accent-700);padding:9px 16px;border:1px solid var(--color-divider)">Download update</div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ updateChecking }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-top:12px">Checking for updates…</div>
+        </sc-if>
+        <sc-if value="{{ updateAvailable }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px;color:var(--color-accent-700);margin-top:12px"><strong>Version {{ latestVersion }} is available.</strong></div>
+          <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 70%, transparent);margin-top:6px;white-space:pre-wrap">{{ releaseNotes }}</div>
+        </sc-if>
+        <sc-if value="{{ updateNotice }}" hint-placeholder-val="{{ '' }}">
+          <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-top:12px">{{ updateNotice }}</div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ maintenanceSupported }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--color-surface);padding:20px;margin-bottom:32px">
+          <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:18px;margin-bottom:16px">Program maintenance</div>
+          <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-bottom:12px">On macOS the program is a self-contained .app folder, and updates are installed manually by replacing it with the new build. Your database and settings live separately and are never removed unless you choose to delete them.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <div onClick="{{ backupDatabase }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="display:inline-flex;align-items:center;width:fit-content;cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:9px 16px;border:1px solid var(--color-divider)">Back up database</div>
+            <div onClick="{{ uninstallApp }}" style-hover="background:color-mix(in srgb, var(--color-accent-700) 10%, transparent)" style="display:inline-flex;align-items:center;width:fit-content;cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;color:var(--color-accent-700);padding:9px 16px;border:1px solid var(--color-divider)">Uninstall the program…</div>
+          </div>
+          <div style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-top:12px">Uninstall removes the .app folder (an administrator password may be required for apps in /Applications). Current database: {{ dbPath }}</div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;width:100%;max-width:1040px;margin:0 auto;padding:48px 24px 80px">
       <div style="background:var(--color-surface);padding:20px;margin-bottom:32px">
         <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:18px;margin-bottom:16px">Deposits</div>
         <sc-if value="{{ depositEmailNotice }}" hint-placeholder-val="{{ '' }}">
@@ -422,6 +474,19 @@ body{margin:0;-webkit-font-smoothing:antialiased}
           <div style="padding:16px 0;text-align:center;color:color-mix(in srgb, var(--color-text) 55%, transparent);font-size:14px">No giving entries found for this person on that date.</div>
         </sc-if>
       </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ reportsActive }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;width:100%;max-width:1040px;margin:0 auto;padding:48px 24px 80px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
+        <h1 style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:32px;margin:0">Reports</h1>
+        <div style="display:flex;gap:10px">
+          <div onClick="{{ backupDatabase }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider);white-space:nowrap">Back up database</div>
+          <div onClick="{{ openChangePassword }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider);white-space:nowrap">Change password</div>
+          <div onClick="{{ logoutAdmin }}" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)" style="cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:13px;padding:8px 16px;border:1px solid var(--color-divider);white-space:nowrap">Log out</div>
+        </div>
+      </div>
 
       <div style="background:var(--color-surface);padding:20px;margin-bottom:32px">
         <div style="font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:18px;margin-bottom:16px">Month-end report</div>
@@ -571,7 +636,11 @@ body{margin:0;-webkit-font-smoothing:antialiased}
           <div style="padding:24px 0;text-align:center;color:color-mix(in srgb, var(--color-text) 55%, transparent);font-size:14px">No donations for this year.</div>
         </sc-if>
       </div>
+    </div>
+  </sc-if>
 
+  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;width:100%;max-width:1040px;margin:0 auto;padding:48px 24px 80px">
       <input type="text" placeholder="Search by name or Tithe ID" value="{{ search }}" onChange="{{ setSearch }}" style="width:100%;max-width:320px;min-height:36px;padding:6px 10px;font:inherit;font-size:14px;color:var(--color-text);background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);margin-bottom:20px;display:block" style-focus="border-color:var(--color-accent);outline:2px solid var(--color-accent);outline-offset:0" />
 
       <sc-if value="{{ hasDonations }}" hint-placeholder-val="{{ true }}">
@@ -871,6 +940,8 @@ class Component extends DCLogic {
     brevoApiKey: '', brevoSenderEmail: '', emailSettingsNotice: '',
     orgName: '', orgNameInput: '', orgNameSettingsNotice: '',
     dbPath: '', dbIsCustom: false,
+    updateStatus: 'idle', updateInfo: null, updateNotice: '',
+    maintenanceSupported: false,
     // SQLite-backed values fetched over IPC (all money fields in cents)
     monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0 },
     otherReportData: { entries: [], total: 0 },
@@ -929,6 +1000,7 @@ class Component extends DCLogic {
   async componentDidMount() {
     try {
       const status = await window.db.authStatus();
+      this.setState({ maintenanceSupported: !!(window.db && window.db.platform === 'darwin') });
       if (status && status.authed) {
         this.setState({ adminAuthed: true });
         await this.loadAdminData();
@@ -1011,6 +1083,26 @@ class Component extends DCLogic {
     const s = this.state;
     if (s.adminAuthed) {
       this.setState({ view: 'admin' });
+      this.loadAdminData();
+    } else {
+      this.setState({ showPasswordModal: true, passwordInput: '', passwordError: '' });
+    }
+  };
+
+  goReports = () => {
+    const s = this.state;
+    if (s.adminAuthed) {
+      this.setState({ view: 'reports' });
+      this.loadAdminData();
+    } else {
+      this.setState({ showPasswordModal: true, passwordInput: '', passwordError: '' });
+    }
+  };
+
+  goSettings = () => {
+    const s = this.state;
+    if (s.adminAuthed) {
+      this.setState({ view: 'settings' });
       this.loadAdminData();
     } else {
       this.setState({ showPasswordModal: true, passwordInput: '', passwordError: '' });
@@ -1101,6 +1193,39 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
   resetDbFile = async () => {
     try {
       await window.db.resetDbFile();
+    } catch (err) {
+      this.notify(this.errMessage(err));
+    }
+  };
+
+  checkForUpdates = async () => {
+    try {
+      this.setState({ updateStatus: 'checking', updateInfo: null, updateNotice: '' });
+      const info = await window.db.checkForUpdates();
+      this.setState({
+        updateStatus: 'done',
+        updateInfo: info,
+        updateNotice: info && info.hasUpdate ? '' : 'You\u2019re running the latest version.',
+      });
+    } catch (err) {
+      this.setState({ updateStatus: 'error', updateInfo: null, updateNotice: this.errMessage(err) });
+    }
+  };
+
+  downloadUpdate = async () => {
+    const info = this.state.updateInfo;
+    if (!info || !info.releaseUrl) { this.notify('No update to download.'); return; }
+    try {
+      await window.db.openUpdate(info.releaseUrl);
+      this.notify('Opening the download page for version ' + info.latestVersion + ' in your browser\u2026');
+    } catch (err) {
+      this.notify(this.errMessage(err));
+    }
+  };
+
+  uninstallApp = async () => {
+    try {
+      await window.db.uninstallApp();
     } catch (err) {
       this.notify(this.errMessage(err));
     }
@@ -2064,13 +2189,29 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
       notesLabel: (parseFloat(s.other) || 0) > 0 ? 'Notes (required)' : 'Notes (optional)',
       formActive: s.view === 'form',
       isAdmin: s.view === 'admin',
+      reportsActive: s.view === 'reports',
+      settingsActive: s.view === 'settings',
       giveTabStyle: tabStyle(s.view === 'form'),
       adminTabStyle: tabStyle(s.view === 'admin'),
+      reportsTabStyle: tabStyle(s.view === 'reports'),
+      settingsTabStyle: tabStyle(s.view === 'settings'),
       goForm: this.goForm,
+      goReports: this.goReports,
+      goSettings: this.goSettings,
       logoutAdmin: this.logoutAdmin,
       backupDatabase: this.backupDatabase,
       chooseDbFile: this.chooseDbFile, resetDbFile: this.resetDbFile,
       dbPath: s.dbPath, dbIsCustom: s.dbIsCustom,
+      checkForUpdates: this.checkForUpdates, downloadUpdate: this.downloadUpdate,
+      currentVersion: (s.updateInfo && s.updateInfo.currentVersion) || '',
+      latestVersion: (s.updateInfo && s.updateInfo.latestVersion) || '',
+      releaseNotes: (s.updateInfo && s.updateInfo.releaseNotes) || '',
+      updateAvailable: !!(s.updateInfo && s.updateInfo.hasUpdate),
+      updateChecking: s.updateStatus === 'checking',
+      updateButtonLabel: s.updateStatus === 'checking' ? 'Checking\u2026' : 'Check for updates',
+      updateNotice: s.updateNotice,
+      maintenanceSupported: s.maintenanceSupported,
+      uninstallApp: this.uninstallApp,
       exportDonations: this.exportDonations, exportDonors: this.exportDonors,
       importGivingFile: this.importGivingFile, importDonorsFile: this.importDonorsFile,
       importMessage: s.importMessage,

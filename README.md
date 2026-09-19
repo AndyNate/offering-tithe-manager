@@ -73,17 +73,27 @@ All builds are the same app — for the full guide and unsigned-build first-run 
 - **Notes** become required whenever an Other amount is entered.
 - On **Submit** the gift is saved and the form immediately resets with empty fields, ready for the next entry (no confirmation screen).
 
-## Admin panel
-Opened from the **Admin** tab with the password (`admin` — **change it from the Admin panel after first use**); **Log out** returns to the Give view and resets admin-only state.
+## Admin, Reports, and Settings
+After signing in with the password (`admin` — **change it from the Settings tab after first use**), the top bar gains **Reports** and **Settings** tabs; **Log out** returns to the Give view and resets admin-only state.
 
+**Admin tab**
 - **Export / Import (CSV)**: export the donors and giving tables to Excel-compatible CSV; import either back, validating required columns before anything is written.
 - **Search / edit donor**: fields for Tithe ID, Full name, Spouse, Email, Notes, Registration date with **Find donor** (by ID/name/email), **Newest entry**, **Edit**, **Add donor** (auto-assigns the lowest free Tithe ID), **Delete donor** (asks for confirmation first), and **Clear**.
 - **Deposits**: a "New deposit" flow recording deposit number, date, teller names, cash/cheques subtotals, tithe-sheet totals, and per-denomination counts (with a printable/count sheet template, `deposit-template.xlsx`). The New deposit dialog fits on screen without scrolling and is click-to-save only (the Enter key never submits it). Deposits can be recorded without signing in as admin — non-admins get an auto-generated read-only deposit number and today's date; admins can edit the deposit number, send report emails, and delete deposits (see [Emails (deposit reports)](#emails-deposit-reports)).
 - **Deposits table**: searchable by deposit # or date.
+- **Donations table**: searchable by name or Tithe ID — date, Tithe ID, name (with a "New" badge for first-time donors), amount, method, fee, notes, and per-row Delete.
+
+**Reports tab**
 - **Month-end report**: month/year picker with Cash/Cheque, E-Transfer, Online and grand totals, plus an "Other donations report" listing each noted donation (any fund — Regular/Mission/Building fund/Other) with its amount breakdown and the entered note.
 - **Fund totals**: Regular/Mission/Building fund/Other totals for the selected month and year.
 - **Year-end report**: each donor's Tithe ID, name, spouse, and total donated that year, with an **Export .csv** button that downloads the report as `year-end-report-<year>.csv`.
-- **Donations table**: searchable by name or Tithe ID — date, Tithe ID, name (with a "New" badge for first-time donors), amount, method, fee, notes, and per-row Delete.
+
+**Settings tab**
+- **Organization**: the brand name shown in the top-left of the app.
+- **Email settings (Brevo) & Email recipients**: API key, sender address, and recipient list for deposit emails (see [Emails (deposit reports)](#emails-deposit-reports)).
+- **Database**: use another database file (saves, closes, and reopens on it) or return to the default.
+- **Program update**: a "Check for updates" button that compares the installed version against the latest GitHub release and, when a newer build exists, shows its release notes with a **Download update** button that opens the GitHub release page in your browser. Updates are manual and portable-friendly — copy your `data` folder, download the new build, and carry your records over.
+- **Program maintenance** (macOS only): **Back up database** and **Uninstall the program…** (removes the `.app` folder, optionally with your data).
 
 ## Emails (deposit reports)
 
@@ -162,6 +172,8 @@ Prerequisites: [Node.js](https://nodejs.org) **20 or newer** (Node 20 LTS is wha
 | Linux | `npm run dist:linux` | `offering-tithe-program-<version>-<arch>.AppImage` + `.deb` |
 
 `npm run dist` builds for whichever OS you are currently on. Installers are unsigned unless code-signing certificates are configured.
+
+The Windows **Setup** installer detects an already-installed copy and shows a maintenance page offering **Update** (install the new version over the old one, keeping your data), **Repair**, or **Uninstall**.
 
 ### Which release file should I download?
 

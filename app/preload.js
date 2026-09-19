@@ -59,4 +59,8 @@ contextBridge.exposeInMainWorld('db', {
   getDbInfo: () => ipcRenderer.invoke('db:getInfo'),
   chooseDbFile: () => ipcRenderer.invoke('db:choose'),
   resetDbFile: () => ipcRenderer.invoke('db:resetDefault'),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  openUpdate: (url) => ipcRenderer.invoke('update:open', { url }),
+  uninstallApp: () => ipcRenderer.invoke('app:uninstall'),
+  platform: process.platform,
 });

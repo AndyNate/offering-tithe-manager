@@ -1,8 +1,9 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, net } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, net, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
 const db = require('./db');
 
 let win = null;
@@ -357,6 +358,167 @@ handle('db:resetDefault', () => {
   app.relaunch({ args: ['--db=default'] });
   app.exit(0);
   return { relaunching: true };
+});
+
+// updates — check for a newer GitHub release and open its download page
+const GITHUB_REPO = 'AndyNate/offering-tithe-manager';
+const GITHUB_LATEST_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+
+function compareVersions(a, b) {
+  const parts = (str) => String(str).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  const pa = parts(a);
+  const pb = parts(b);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0);
+    if (diff !== 0) return diff > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
+function getLatestRelease() {
+  return new Promise((resolve, reject) => {
+    const req = net.request({
+      method: 'GET',
+      url: GITHUB_LATEST_URL,
+      headers: {
+        'accept': 'application/vnd.github+json',
+        'user-agent': `offering-tithe-program/${app.getVersion()}`,
+      },
+    });
+    let settled = false;
+    const finish = (fn) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+    const timer = setTimeout(() => {
+      finish(() => { try { req.abort(); } catch {} });
+      reject(new Error('Not connected to the internet \u2014 couldn\u2019t check for updates.'));
+    }, 15000);
+    req.on('response', (res) => {
+      const chunks = [];
+      res.on('data', (c) => chunks.push(c));
+      res.on('end', () => {
+        finish(() => {});
+        const text = Buffer.concat(chunks).toString('utf8');
+        if (res.statusCode === 404) {
+          resolve(null); // no published release yet
+          return;
+        }
+        if (res.statusCode === 403 || res.statusCode === 429) {
+          reject(new Error('GitHub\u2019s update check was rate-limited (error ' + res.statusCode + '). Try again later.'));
+          return;
+        }
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          reject(new Error('Could not check for updates \u2014 GitHub responded with error ' + res.statusCode + '.'));
+          return;
+        }
+        try {
+          resolve(JSON.parse(text));
+        } catch {
+          reject(new Error('Could not check for updates \u2014 GitHub returned an unreadable response.'));
+        }
+      });
+    });
+    req.on('error', (e) => finish(() => reject(new Error('Not connected to the internet \u2014 couldn\u2019t check for updates.'))));
+    req.end();
+  });
+}
+
+handle('update:check', async () => {
+  const currentVersion = app.getVersion();
+  const release = await getLatestRelease();
+  const latestVersion = release && release.tag_name && String(release.tag_name).replace(/^v/, '');
+  const hasUpdate = !!(latestVersion && compareVersions(latestVersion, currentVersion) > 0);
+  return {
+    currentVersion,
+    latestVersion: latestVersion || currentVersion,
+    hasUpdate,
+    releaseName: hasUpdate ? (release.name || '') : '',
+    releaseNotes: hasUpdate ? (String(release.body || '').slice(0, 2000)) : '',
+    releaseUrl: hasUpdate ? (release.html_url || `https://github.com/${GITHUB_REPO}/releases/latest`) : '',
+  };
+});
+
+handle('update:open', async ({ url }) => {
+  if (!url || typeof url !== 'string') throw new Error('No download URL to open.');
+  try {
+    await shell.openExternal(url);
+  } catch {
+    throw new Error('Could not open the download page in your browser \u2014 check that a default browser is set.');
+  }
+  return { ok: true };
+});
+
+// macOS maintenance — a packaged .app is replaced manually (no installer wizard),
+// so the app offers a self-uninstall. The database and settings are kept unless
+// the user explicitly asks to delete them.
+handle('app:uninstall', async () => {
+  requireAdmin();
+  if (process.platform !== 'darwin' || !app.isPackaged) {
+    throw new Error('Uninstall is only available in the packaged macOS app.');
+  }
+  const bundle = path.dirname(path.dirname(process.execPath)); // `.../*.app/Contents/MacOS/<exe>` -> `.../*.app`
+  if (!bundle.endsWith('.app')) throw new Error('Could not locate the application bundle.');
+
+  const confirm = await dialog.showMessageBox(win, {
+    type: 'warning',
+    title: 'Uninstall Offering & Tithe Management Program?',
+    message: 'Uninstall Offering & Tithe Management Program?',
+    detail:
+      'This removes the application only. Your database and settings are kept.\r\n\r\n' +
+      'The .app folder that will be removed is:\r\n' + bundle,
+    buttons: ['Cancel', 'Uninstall'],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (confirm.response !== 1) return { canceled: true };
+
+  const dataChoice = await dialog.showMessageBox(win, {
+    type: 'question',
+    title: 'Delete your data too?',
+    message: 'Also delete your database and settings?',
+    detail:
+      'Your data is stored separately at:\r\n' + (currentDbPath || app.getPath('userData')) +
+      '\r\n\r\nChoose "Keep data" to leave it untouched so it can be used again later, or "Delete" ' +
+      'to remove the app data as well. Files you chose manually are never deleted.',
+    buttons: ['Keep data', 'Delete data too'],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  const deleteData = dataChoice.response === 1;
+
+  let removed = false;
+  try {
+    fs.rmSync(bundle, { recursive: true, force: true });
+    removed = true;
+  } catch (e) {
+    const code = (e && e.code) || '';
+    if (!/EACCES|EPERM|EBUSY/.test(code)) throw new Error('Could not remove the application (' + code + ').');
+  }
+  if (!removed) {
+    // Installed in a protected location (e.g. /Applications): ask for admin rights via macOS.
+    const escaped = bundle.replace(/'/g, "'\\''");
+    await new Promise((resolve, reject) => {
+      execFile(
+        'osascript',
+        ['-e', `do shell script "rm -rf '${escaped}'" with administrator privileges`],
+        { timeout: 120000 },
+        (err) => (err ? reject(new Error('Uninstall could not be completed \u2014 the .app folder could not be removed.')) : resolve())
+      );
+    });
+  }
+
+  if (deleteData) {
+    try { db.close(); } catch {}
+    try { fs.rmSync(app.getPath('userData'), { recursive: true, force: true }); } catch {}
+  }
+
+  setTimeout(() => app.exit(0), 400);
+  return { ok: true };
 });
 
 // ---------------------------------------------------------------------------
