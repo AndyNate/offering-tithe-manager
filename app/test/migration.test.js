@@ -10,7 +10,7 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'otm-migrate-test-'));
 const dbPath = path.join(dir, 'legacy.db');
 
 // 1. Build a legacy DB with the OLD schema/tables exactly as v1 shipped.
-{
+try {
   const d = new Database(dbPath);
   d.pragma('foreign_keys = ON');
   d.exec(`
@@ -65,11 +65,19 @@ const dbPath = path.join(dir, 'legacy.db');
   assert.strictEqual(etransfer.method, 'E-Transfer');
   assert.strictEqual(etransfer.onlineFeeAmount, 0);
 
+  // 2b. The Entry Log column was added by migration; legacy rows keep NULL/''.
+  assert.strictEqual(online.createdAt, '');
+  assert.strictEqual(etransfer.createdAt, '');
+
   // 3. New 'Online' gifts with a fee still work after migration.
-  const r = db.recordGift({ name: 'Legacy Tither', regular: 1000, method: 'Online', onlineFee: 25 }, { isAdmin: true });
+  const r = db.recordGift({ name: 'Legacy Tither', regular: 1000, method: 'Online', onlineFee: 25, date: '2026-08-12' }, { isAdmin: true });
   assert.strictEqual(r.donation.method, 'Online');
   assert.strictEqual(r.donation.isFee, true);
   assert.strictEqual(r.donation.onlineFeeAmount, 25);
+
+  // 3b. New rows get a local created_at stamp and appear in the Entry Log query.
+  assert.match(r.donation.createdAt, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+  assert.ok(db.listGivingByDate(r.donation.date).some((g) => g.id === r.donation.id));
 
   // 4. Month report now rolls 'Online' up correctly.
   const rep = db.monthReport('2026', '8');
@@ -93,4 +101,8 @@ const dbPath = path.join(dir, 'legacy.db');
   db.close();
   fs.rmSync(dir, { recursive: true, force: true });
   console.log('migration test: ok (legacy Tithly -> Online, column renamed, data + sequence preserved)');
+  process.exit(0);
+} catch (err) {
+  console.error(err && err.stack || err);
+  process.exit(1);
 }

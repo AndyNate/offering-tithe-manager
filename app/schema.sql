@@ -25,7 +25,8 @@ CREATE TABLE giving (
     note               TEXT,
     is_fee             BOOLEAN NOT NULL DEFAULT 0,
     online_fee_amount  INTEGER NOT NULL DEFAULT 0,   -- cents
-    created_donor      BOOLEAN NOT NULL DEFAULT 0    -- true when this gift's submit created the donor ("New" badge)
+    created_donor      BOOLEAN NOT NULL DEFAULT 0,   -- true when this gift's submit created the donor ("New" badge)
+    created_at         TEXT                          -- local 'YYYY-MM-DD HH:MM:SS' stamp for the Entry Log
 );
 
 CREATE INDEX idx_giving_tithe_id ON giving (tithe_id);

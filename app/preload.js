@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('db', {
 
   // giving
   listGiving: (search) => ipcRenderer.invoke('giving:list', { search }),
+  listGivingByDate: (date) => ipcRenderer.invoke('giving:listByDate', { date }),
+  listGivingSession: () => ipcRenderer.invoke('giving:listSession'),
   recordGift: (payload) => ipcRenderer.invoke('giving:recordGift', payload),
   deleteGiving: (id) => ipcRenderer.invoke('giving:delete', { id }),
   findGivingDatesByPerson: (search) => ipcRenderer.invoke('giving:findDates', { search }),
