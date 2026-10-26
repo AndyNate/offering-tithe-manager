@@ -152,7 +152,10 @@ handle('donors:delete', ({ titheId }) => {
 
 // giving — recordGift honors the real session state server-side
 handle('giving:list', ({ search }) => db.listGiving(search));
-handle('giving:listByDate', ({ date }) => db.listGivingByDate(date));
+handle('giving:listByDate', ({ date }) => {
+  requireAdmin(); // Whole day is an admin view
+  return db.listGivingByDate(date);
+});
 handle('giving:listSession', () => db.listGivingByIds([...sessionGivingIds]));
 handle('giving:recordGift', (payload) => {
   const res = db.recordGift(payload, { isAdmin: authed });

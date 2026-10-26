@@ -124,7 +124,9 @@ body{margin:0;-webkit-font-smoothing:antialiased}
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap">
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <div onClick="{{ showEntryLogSession }}" style="{{ entryLogSessionStyle }}">{{ entryLogSessionLabel }}</div>
-          <div onClick="{{ showEntryLogDay }}" style="{{ entryLogDayStyle }}">{{ entryLogDayLabel }}</div>
+          <sc-if value="{{ adminAuthed }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ showEntryLogDay }}" style="{{ entryLogDayStyle }}">{{ entryLogDayLabel }}</div>
+          </sc-if>
         </div>
         <sc-if value="{{ entryLogIsDay }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;align-items:center;gap:8px">
@@ -1228,18 +1230,20 @@ class Component extends DCLogic {
 
   async loadEntryLog() {
     try {
-      const [entryLogDay, entryLogSession] = await Promise.all([
-        window.db.listGivingByDate(this.entryLogDateValue()),
-        window.db.listGivingSession(),
-      ]);
-      this.setState({ entryLogDay, entryLogSession });
+      const session = await window.db.listGivingSession();
+      if (!this.state.adminAuthed) {
+        this.setState({ entryLogDay: [], entryLogSession: session });
+        return;
+      }
+      const day = await window.db.listGivingByDate(this.entryLogDateValue());
+      this.setState({ entryLogDay: day, entryLogSession: session });
     } catch (err) {
       this.notify(this.errMessage(err));
     }
   }
 
-  // Whole-day date: whatever the user picked on the Entry Log, otherwise the
-  // current giving date (an admin's selected date, or today). No sign-in needed.
+  // Whole-day date: whatever the admin picked on the Entry Log, otherwise the
+  // current giving date (the admin's selected date, or today).
   entryLogDateValue() {
     return this.state.entryLogDate || this.depositTargetDate();
   }
@@ -1253,7 +1257,11 @@ class Component extends DCLogic {
 
   showEntryLogSession = () => this.setState({ entryLogScope: 'session' });
 
-  showEntryLogDay = () => this.setState({ entryLogScope: 'day' });
+  showEntryLogDay = () => {
+    // Whole day is an admin view; ignore clicks from a signed-out renderer.
+    if (!this.state.adminAuthed) return;
+    this.setState({ entryLogScope: 'day' });
+  };
 
   async deleteEntryLogEntry(id) {
     try {
@@ -1357,7 +1365,7 @@ class Component extends DCLogic {
     window.db.logout();
     this.setState({
       adminAuthed: false, defaultPasswordWarning: false, view: 'form', giveDate: '', method: 'Cash / Cheque', onlineFee: '',
-      entryLogDate: '',
+      entryLogScope: 'session', entryLogDate: '', entryLogDay: [],
       donations: [], donors: [], deposits: [],
       emailRecipients: [], newRecipientEmail: '',
       brevoApiKey: '', brevoSenderEmail: '', emailSettingsNotice: '',
@@ -2386,7 +2394,7 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
     const entryLogDate = s.entryLogDate || this.depositTargetDate();
     const entryLogDayEntries = s.entryLogDay || [];
     const entryLogSessionEntries = s.entryLogSession || [];
-    const entryLogScope = s.entryLogScope === 'day' ? 'day' : 'session';
+    const entryLogScope = (s.entryLogScope === 'day' && s.adminAuthed) ? 'day' : 'session';
     const entryLogEntries = entryLogScope === 'day' ? entryLogDayEntries : entryLogSessionEntries;
     const entryLogSessionIds = new Set(entryLogSessionEntries.map((g) => g.id));
     const logTotals = entryLogEntries.reduce((acc, g) => {
@@ -2455,7 +2463,7 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
       entryLogIsSession: entryLogScope === 'session',
       entryLogIsDay: entryLogScope === 'day',
       entryLogSubtitle: entryLogScope === 'session'
-        ? 'Entries added since the app was opened. Saving a deposit starts a new session.'
+        ? 'Entries added since the app was opened. Saving a deposit starts a new session.' + (s.adminAuthed ? '' : ' Whole day requires admin sign-in.')
         : 'All entries recorded for ' + this.fmtLongDate(entryLogDate) + '.',
       entryLogSessionStyle: tabStyle(entryLogScope === 'session'),
       entryLogDayStyle: tabStyle(entryLogScope === 'day'),
