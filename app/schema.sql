@@ -26,6 +26,7 @@ CREATE TABLE giving (
     is_fee             BOOLEAN NOT NULL DEFAULT 0,
     online_fee_amount  INTEGER NOT NULL DEFAULT 0,   -- cents
     created_donor      BOOLEAN NOT NULL DEFAULT 0,   -- true when this gift's submit created the donor ("New" badge)
+    entry_mode         VARCHAR(10) CHECK (entry_mode IN ('id', 'name')),  -- what the volunteer typed: Tithe ID or name
     created_at         TEXT                          -- local 'YYYY-MM-DD HH:MM:SS' stamp for the Entry Log
 );
 

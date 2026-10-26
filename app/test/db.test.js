@@ -150,6 +150,16 @@ t('giving rows get a local created_at stamp', () => {
   assert.strictEqual(day[0].id, r.donation.id);
   assert.strictEqual(day[0].createdAt, r.donation.createdAt);
 });
+t('recordGift remembers whether a Tithe ID or a name was typed', () => {
+  // Fixed 2020 date so these extra rows don't disturb the 2026 report checks.
+  const byName = db.recordGift({ name: 'Cara Cole', regular: 700, date: '2020-07-07' }, { isAdmin: true });
+  assert.strictEqual(byName.donation.entryMode, 'name');
+  const byId = db.recordGift({ name: '1', regular: 700, date: '2020-07-07' }, { isAdmin: true });
+  assert.strictEqual(byId.donation.entryMode, 'id');
+  assert.strictEqual(byId.donation.titheId, '1');
+  assert.strictEqual(byId.donation.fullName, 'Alice Anderson-Smith', 'donor is still resolved for Whole day');
+  assert.strictEqual(db.listGivingByIds([byId.donation.id])[0].entryMode, 'id');
+});
 t('listGivingByDate filters by date, orders by entry id, and falls back to today', () => {
   const a = db.recordGift({ name: 'Cara Cole', regular: 100, date: '2020-07-05' }, { isAdmin: true });
   const b = db.recordGift({ name: 'Cara Cole', regular: 200, date: '2020-07-06' }, { isAdmin: true });

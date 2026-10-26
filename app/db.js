@@ -52,6 +52,7 @@ function init(dbPath) {
 
   migrateGivingOnline();
   migrateGivingCreatedAt();
+  migrateGivingEntryMode();
 
   // Seed settings defaults (default password; changeable in-app later)
   const seed = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
@@ -116,6 +117,16 @@ function migrateGivingCreatedAt() {
   if (!cols.length) return;
   if (cols.some((c) => c.name === 'created_at')) return;
   db.exec('ALTER TABLE giving ADD COLUMN created_at TEXT');
+}
+
+// v1.4 -> Entry Log session view: remember whether the volunteer typed a Tithe
+// ID or a name, so "This session" can show only what was entered. Idempotent;
+// pre-existing rows keep NULL and fall back to showing both identifiers.
+function migrateGivingEntryMode() {
+  const cols = db.prepare('PRAGMA table_info(giving)').all();
+  if (!cols.length) return;
+  if (cols.some((c) => c.name === 'entry_mode')) return;
+  db.exec("ALTER TABLE giving ADD COLUMN entry_mode VARCHAR(10) CHECK (entry_mode IN ('id', 'name'))");
 }
 
 // Password hashing uses scrypt (a memory-hard KDF) with a per-user random
@@ -321,6 +332,7 @@ function mapGift(row) {
     isFee: !!row.is_fee,
     onlineFeeAmount: row.online_fee_amount, // cents
     notes: row.note || '',
+    entryMode: row.entry_mode || '',
     createdAt: row.created_at || '',
   };
 }
@@ -328,7 +340,7 @@ function mapGift(row) {
 const GIVING_LIST_SQL = `
   SELECT g.id, g.date, g.tithe_id, d.full_name, g.created_donor, g.total_amount,
          g.regular, g.mission, g.building_fund, g.other, g.giving_type,
-         g.is_fee, g.online_fee_amount, g.note, g.created_at
+         g.is_fee, g.online_fee_amount, g.note, g.entry_mode, g.created_at
   FROM giving g JOIN donors d ON d.tithe_id = g.tithe_id`;
 
 function listGiving(search) {
@@ -435,12 +447,13 @@ function updateGiving(id, fields) {
 
 function insertGivingRow(run, gift) {
   const info = run.prepare(
-    `INSERT INTO giving (tithe_id, date, giving_type, regular, mission, building_fund, other, note, is_fee, online_fee_amount, created_donor, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO giving (tithe_id, date, giving_type, regular, mission, building_fund, other, note, is_fee, online_fee_amount, created_donor, entry_mode, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     gift.titheId, gift.date, gift.method,
     gift.regular, gift.mission, gift.buildingFund, gift.other,
     gift.notes || null, gift.isFee ? 1 : 0, gift.onlineFeeAmount || 0, gift.createdDonor ? 1 : 0,
+    gift.entryMode || null,
     gift.createdAt || nowStr()
   );
   return Number(info.lastInsertRowid);
@@ -507,6 +520,7 @@ function recordGift(payload, opts = {}) {
       notes: fields.notes,
       isFee: fields.isFee, onlineFeeAmount: fields.feeAmt,
       createdDonor: isNewEntry,
+      entryMode: /^\d+$/.test(input) ? 'id' : 'name',
     });
     return { id, donor: mapDonor(donor), isNewEntry, date: fields.date };
   });

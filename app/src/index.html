@@ -121,9 +121,17 @@ body{margin:0;-webkit-font-smoothing:antialiased}
       </div>
       <div style="font-size:13px;color:color-mix(in srgb, var(--color-text) 60%, transparent);margin-bottom:20px">{{ entryLogSubtitle }}</div>
 
-      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-        <div onClick="{{ showEntryLogSession }}" style="{{ entryLogSessionStyle }}">{{ entryLogSessionLabel }}</div>
-        <div onClick="{{ showEntryLogDay }}" style="{{ entryLogDayStyle }}">{{ entryLogDayLabel }}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div onClick="{{ showEntryLogSession }}" style="{{ entryLogSessionStyle }}">{{ entryLogSessionLabel }}</div>
+          <div onClick="{{ showEntryLogDay }}" style="{{ entryLogDayStyle }}">{{ entryLogDayLabel }}</div>
+        </div>
+        <sc-if value="{{ entryLogIsDay }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:color-mix(in srgb, var(--color-text) 60%, transparent);white-space:nowrap">Giving date</span>
+            <input type="date" value="{{ entryLogDate }}" onChange="{{ setEntryLogDate }}" style="min-height:34px;padding:5px 9px;font:inherit;font-size:13px;color:var(--color-text);background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md)" style-focus="border-color:var(--color-accent);outline:2px solid var(--color-accent);outline-offset:0" />
+          </div>
+        </sc-if>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:16px">
@@ -164,8 +172,13 @@ body{margin:0;-webkit-font-smoothing:antialiased}
                 <sc-raw-tr>
                   <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">#</sc-raw-th>
                   <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Time</sc-raw-th>
-                  <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Tithe ID</sc-raw-th>
-                  <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Name</sc-raw-th>
+                  <sc-if value="{{ entryLogIsSession }}" hint-placeholder-val="{{ true }}">
+                    <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Entered as</sc-raw-th>
+                  </sc-if>
+                  <sc-if value="{{ entryLogIsDay }}" hint-placeholder-val="{{ false }}">
+                    <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Tithe ID</sc-raw-th>
+                    <sc-raw-th style="text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Name</sc-raw-th>
+                  </sc-if>
                   <sc-raw-th style="text-align:right;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Regular</sc-raw-th>
                   <sc-raw-th style="text-align:right;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Mission</sc-raw-th>
                   <sc-raw-th style="text-align:right;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:color-mix(in srgb, var(--color-text) 60%, transparent);padding:6px;border-bottom:2px solid var(--color-divider)">Building</sc-raw-th>
@@ -182,13 +195,23 @@ body{margin:0;-webkit-font-smoothing:antialiased}
                   <sc-raw-tr style-hover="background:color-mix(in srgb, var(--color-text) 4%, transparent)">
                     <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ row.index }}</sc-raw-td>
                     <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);white-space:nowrap">{{ row.timeStr }}</sc-raw-td>
-                    <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider)">{{ row.titheId }}</sc-raw-td>
-                    <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);white-space:nowrap">
-                      <span title="{{ row.fullName }}" style="display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">{{ row.fullName }}</span>
-                      <sc-if value="{{ row.createdDonor }}" hint-placeholder-val="{{ false }}">
-                        <span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;background:var(--color-accent);color:var(--color-bg)">New</span>
-                      </sc-if>
-                    </sc-raw-td>
+                    <sc-if value="{{ entryLogIsSession }}" hint-placeholder-val="{{ true }}">
+                      <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);white-space:nowrap">
+                        <span title="{{ row.enteredAs }}" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">{{ row.enteredAs }}</span>
+                        <sc-if value="{{ row.createdDonor }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;background:var(--color-accent);color:var(--color-bg)">New</span>
+                        </sc-if>
+                      </sc-raw-td>
+                    </sc-if>
+                    <sc-if value="{{ entryLogIsDay }}" hint-placeholder-val="{{ false }}">
+                      <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider)">{{ row.titheId }}</sc-raw-td>
+                      <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);white-space:nowrap">
+                        <span title="{{ row.fullName }}" style="display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom">{{ row.fullName }}</span>
+                        <sc-if value="{{ row.createdDonor }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:inline-block;margin-left:6px;padding:1px 5px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;background:var(--color-accent);color:var(--color-bg)">New</span>
+                        </sc-if>
+                      </sc-raw-td>
+                    </sc-if>
                     <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);text-align:right">{{ row.regularStr }}</sc-raw-td>
                     <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);text-align:right">{{ row.missionStr }}</sc-raw-td>
                     <sc-raw-td style="padding:6px;border-bottom:1px solid var(--color-divider);text-align:right">{{ row.buildingFundStr }}</sc-raw-td>
@@ -1039,6 +1062,7 @@ class Component extends DCLogic {
     adminDonorError: '', adminDonorNotice: '',
     giveDate: '',
     entryLogScope: 'session',
+    entryLogDate: '',
     entryLogDay: [], entryLogSession: [],
     deposits: [],
     depositSearch: '',
@@ -1205,7 +1229,7 @@ class Component extends DCLogic {
   async loadEntryLog() {
     try {
       const [entryLogDay, entryLogSession] = await Promise.all([
-        window.db.listGivingByDate(this.depositTargetDate()),
+        window.db.listGivingByDate(this.entryLogDateValue()),
         window.db.listGivingSession(),
       ]);
       this.setState({ entryLogDay, entryLogSession });
@@ -1213,6 +1237,17 @@ class Component extends DCLogic {
       this.notify(this.errMessage(err));
     }
   }
+
+  // Whole-day date: whatever the user picked on the Entry Log, otherwise the
+  // current giving date (an admin's selected date, or today). No sign-in needed.
+  entryLogDateValue() {
+    return this.state.entryLogDate || this.depositTargetDate();
+  }
+
+  setEntryLogDate = (e) => {
+    const value = e && e.target ? e.target.value : '';
+    this.setState({ entryLogDate: value }, () => this.loadEntryLog());
+  };
 
   refreshEntryLog = () => this.loadEntryLog();
 
@@ -1322,6 +1357,7 @@ class Component extends DCLogic {
     window.db.logout();
     this.setState({
       adminAuthed: false, defaultPasswordWarning: false, view: 'form', giveDate: '', method: 'Cash / Cheque', onlineFee: '',
+      entryLogDate: '',
       donations: [], donors: [], deposits: [],
       emailRecipients: [], newRecipientEmail: '',
       brevoApiKey: '', brevoSenderEmail: '', emailSettingsNotice: '',
@@ -2347,7 +2383,7 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
     const brandName = s.orgName || this.props.orgName || 'OTMP';
 
     // Entry Log — "This session" (default) or the whole giving date.
-    const entryLogDate = this.depositTargetDate();
+    const entryLogDate = s.entryLogDate || this.depositTargetDate();
     const entryLogDayEntries = s.entryLogDay || [];
     const entryLogSessionEntries = s.entryLogSession || [];
     const entryLogScope = s.entryLogScope === 'day' ? 'day' : 'session';
@@ -2370,6 +2406,11 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
       timeStr: this.fmtTime(g.createdAt),
       titheId: g.titheId,
       fullName: g.fullName,
+      // Session view shows only what was typed: a Tithe ID or a name. Rows that
+      // predate entry_mode (or CSV imports) fall back to both identifiers.
+      enteredAs: g.entryMode === 'id' ? String(g.titheId)
+        : g.entryMode === 'name' ? g.fullName
+        : g.fullName + ' \u00b7 ' + g.titheId,
       createdDonor: !!g.createdDonor,
       regularStr: moneyCents(g.regular),
       missionStr: moneyCents(g.mission),
@@ -2409,6 +2450,10 @@ monthReportData: { cashCheque: 0, eTransfer: 0, online: 0, grandTotal: 0, totalD
       refreshEntryLog: this.refreshEntryLog,
       showEntryLogSession: this.showEntryLogSession,
       showEntryLogDay: this.showEntryLogDay,
+      setEntryLogDate: this.setEntryLogDate,
+      entryLogDate,
+      entryLogIsSession: entryLogScope === 'session',
+      entryLogIsDay: entryLogScope === 'day',
       entryLogSubtitle: entryLogScope === 'session'
         ? 'Entries added since the app was opened. Saving a deposit starts a new session.'
         : 'All entries recorded for ' + this.fmtLongDate(entryLogDate) + '.',

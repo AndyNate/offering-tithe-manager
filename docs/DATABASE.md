@@ -7,7 +7,7 @@ The app stores everything in a single self-contained SQLite file (`offering-tith
 The live schema (created by `app/db.js`) contains:
 
 - `donors`: `tithe_id` (PK, sequential), `date`, `full_name`, `spouse`, `email`, `notes`, `is_new_entry`.
-- `giving`: `id` (PK), `tithe_id` (FK), `date`, `giving_type`, `regular`, `mission`, `building_fund`, `other`, `total_amount` (generated), `note`, `is_fee`, `online_fee_amount`, `created_donor`, `created_at` (local `YYYY-MM-DD HH:MM:SS` stamp used by the Entry Log; NULL for rows that predate v1.4).
+- `giving`: `id` (PK), `tithe_id` (FK), `date`, `giving_type`, `regular`, `mission`, `building_fund`, `other`, `total_amount` (generated), `note`, `is_fee`, `online_fee_amount`, `created_donor`, `entry_mode` (`'id'` or `'name'` — what the volunteer typed, used by the Entry Log session view; NULL for rows that predate v1.4 or come from CSV import), `created_at` (local `YYYY-MM-DD HH:MM:SS` stamp used by the Entry Log; NULL for rows that predate v1.4).
 - `deposits`: `deposit_number` (unique), `date`, `teller1`, `teller2`, `cash_subtotal`, `cheques_subtotal`, `total`, `tithe_sheet_total`, `counts_json`, `cheques_json`, `emailed_to`.
 - `settings`: key/value store (hashed admin password, Brevo API key/sender).
 

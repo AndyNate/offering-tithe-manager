@@ -65,9 +65,11 @@ try {
   assert.strictEqual(etransfer.method, 'E-Transfer');
   assert.strictEqual(etransfer.onlineFeeAmount, 0);
 
-  // 2b. The Entry Log column was added by migration; legacy rows keep NULL/''.
+  // 2b. The Entry Log columns were added by migration; legacy rows keep NULL/''.
   assert.strictEqual(online.createdAt, '');
   assert.strictEqual(etransfer.createdAt, '');
+  assert.strictEqual(online.entryMode, '');
+  assert.strictEqual(etransfer.entryMode, '');
 
   // 3. New 'Online' gifts with a fee still work after migration.
   const r = db.recordGift({ name: 'Legacy Tither', regular: 1000, method: 'Online', onlineFee: 25, date: '2026-08-12' }, { isAdmin: true });
@@ -77,6 +79,7 @@ try {
 
   // 3b. New rows get a local created_at stamp and appear in the Entry Log query.
   assert.match(r.donation.createdAt, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+  assert.strictEqual(r.donation.entryMode, 'name', 'typed name is remembered');
   assert.ok(db.listGivingByDate(r.donation.date).some((g) => g.id === r.donation.id));
 
   // 4. Month report now rolls 'Online' up correctly.

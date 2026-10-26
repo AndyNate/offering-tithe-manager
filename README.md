@@ -77,9 +77,9 @@ All builds are the same app — for the full guide and unsigned-build first-run 
 ## Entry Log
 An always-available tab (no password) for checking what has been entered before a deposit is made and counted.
 
-- **This session** (default) lists the gifts added through the Give form since the app was opened; **Whole day** lists every gift recorded for the current giving date (today, or the admin's selected date). Saving a deposit clears the session list — records are never deleted by that.
+- **This session** (default) lists the gifts added through the Give form since the app was opened; **Whole day** lists every gift recorded for a date chosen in the Entry Log (today by default). Neither view needs a password. Saving a deposit clears the session list — records are never deleted by that.
 - Running totals: number of entries, **Cash / Cheque** (the figure that goes on the deposit sheet), E-Transfer, Online, grand total, and a Regular / Mission / Building fund / Other breakdown.
-- Each row shows entry order, the time it was added, Tithe ID, name (with a **New** badge for first-time donors), per-fund amounts, total, method, online fee, and notes.
+- **This session** shows only what was typed on the Give form: enter a Tithe ID and the row shows the ID (not the donor's name); enter a name and it shows the name (not the Tithe ID). **Whole day** always shows both Tithe ID and name for reconciliation. Each row also has entry order, the time it was added, a **New** badge for first-time donors, per-fund amounts, total, method, online fee, and notes. Long names/notes truncate with a hover title; narrow windows scroll horizontally.
 - **Delete** is available to admins on every row; volunteers can delete only entries they added during the current session (enforced in the main process). Deleting removes the gift record itself, and the day totals update with it.
 
 ## Admin, Reports, and Settings
@@ -210,7 +210,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 ## Security notes
 
 - **Admin authorization is enforced in the main process**, not just hidden in the UI. Destructive/admin actions (deleting donors/gifts/deposits, editing giving, CSV import, settings changes) require a valid admin session server-side; the renderer cannot bypass these by calling the exposed IPC methods directly.
-- **Entry Log deletion follows the same rule.** A non-admin may only delete gift ids added through the Give form during the current app run; the main process rejects anything older. Saving a deposit clears the session list (the gift records themselves stay in the database).
+- **Entry Log deletion follows the same rule.** A non-admin may only delete gift ids added through the Give form during the current app run; the main process rejects anything older. Saving a deposit clears the session list (the gift records themselves stay in the database). The Whole day date picker is deliberately not password-gated, so volunteers can reconcile earlier dates; it exposes giving records (amounts, names/IDs) for any date to anyone using the app.
 - **Email sending is available to all sessions** — non-admin volunteers can record a deposit and send its report email. The raw **Brevo API key is only surfaced to an authenticated admin session**; it is stored in the SQLite `settings` table (not a plaintext file), read internally in the main process, and never logged.
 - **Exported CSV files are hardened against spreadsheet formula injection** (CWE-1236): any exported cell beginning with `=`, `+`, `-`, or `@` is prefixed so Excel/Sheets treat it as plain text. Because imported donor/note data is stored verbatim, treat any CSV you import as untrusted input.
 - **The admin password is stored as a salted scrypt hash** (not SHA-256). The initial password is `admin` — change it from the Admin panel after first use.
