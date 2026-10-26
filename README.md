@@ -6,9 +6,9 @@
   <a href="https://github.com/AndyNate/offering-tithe-manager/actions/workflows/build.yml"><img alt="Build status" src="https://github.com/AndyNate/offering-tithe-manager/actions/workflows/build.yml/badge.svg"></a>
 </p>
 
-Built for churches and small organizations that want an **offline, no-subscription** way to track offerings and tithes — no account, no setup fees, and nothing leaves your own machine. A cross-platform desktop application (Windows, macOS, Linux) for offering/tithe recording: volunteers enter donations through a simple **Give** form, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
+Built for churches and small organizations that want an **offline, no-subscription** way to track offerings and tithes — no account, no setup fees, and nothing leaves your own machine. A cross-platform desktop application (Windows, macOS, Linux) for offering/tithe recording: volunteers enter donations through a simple **Give** form, an always-available **Entry Log** shows the day's entries and running totals for reconciliation, and a password-gated **Admin** panel manages donors, deposits, CSV import/export, and month-end / year-end reports. All data stays local in a single SQLite file — nothing is sent anywhere except optional deposit-report emails.
 
-Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
+Built with **Electron 44** and **better-sqlite3** (React 18 renderer, vendored locally so the app runs fully offline).
 
 > **AI-assisted development:** this program was made with AI tooling.
 
@@ -17,6 +17,7 @@ Built with **Electron 43** and **better-sqlite3** (React 18 renderer, vendored l
 - [Screenshots](#screenshots)
 - [Download](#download)
 - [Give (entry) form](#give-entry-form)
+- [Entry Log](#entry-log)
 - [Admin panel](#admin-panel)
 - [Emails (deposit reports)](#emails-deposit-reports)
 - [Data storage](#data-storage)
@@ -72,6 +73,14 @@ All builds are the same app — for the full guide and unsigned-build first-run 
 - Selecting **Online** reveals an **Online fee** field — enter whatever processing fee the online giving provider charged.
 - **Notes** become required whenever an Other amount is entered.
 - On **Submit** the gift is saved and the form immediately resets with empty fields, ready for the next entry (no confirmation screen).
+
+## Entry Log
+An always-available tab (no password) for checking what has been entered before a deposit is made and counted.
+
+- **This session** (default) lists the gifts added through the Give form since the app was opened; **Whole day** (admin sign-in required) lists every gift recorded for a date chosen in the Entry Log (today by default). Saving a deposit clears the session list — records are never deleted by that.
+- Running totals: number of entries, **Cash / Cheque** (the figure that goes on the deposit sheet), E-Transfer, Online, grand total, and a Regular / Mission / Building fund / Other breakdown.
+- **This session** shows only what was typed on the Give form: enter a Tithe ID and the row shows the ID (not the donor's name); enter a name and it shows the name (not the Tithe ID). **Whole day** always shows both Tithe ID and name for reconciliation. Each row also has entry order, the time it was added, a **New** badge for first-time donors, per-fund amounts, total, method, online fee, and notes. Long names/notes truncate with a hover title; narrow windows scroll horizontally.
+- **Delete** is available to admins on every row; volunteers can delete only entries they added during the current session (enforced in the main process). Deleting removes the gift record itself, and the day totals update with it.
 
 ## Admin, Reports, and Settings
 After signing in with the password (`admin` — **change it from the Settings tab after first use**), the top bar gains **Reports** and **Settings** tabs; **Log out** returns to the Give view and resets admin-only state.
@@ -201,6 +210,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 ## Security notes
 
 - **Admin authorization is enforced in the main process**, not just hidden in the UI. Destructive/admin actions (deleting donors/gifts/deposits, editing giving, CSV import, settings changes) require a valid admin session server-side; the renderer cannot bypass these by calling the exposed IPC methods directly.
+- **Entry Log deletion follows the same rule.** A non-admin may only delete gift ids added through the Give form during the current app run; the main process rejects anything older. Saving a deposit clears the session list (the gift records themselves stay in the database). **Whole day** — including its date picker and Tithe ID/name columns — is admin-only, and the main process refuses day queries from a signed-out renderer.
 - **Email sending is available to all sessions** — non-admin volunteers can record a deposit and send its report email. The raw **Brevo API key is only surfaced to an authenticated admin session**; it is stored in the SQLite `settings` table (not a plaintext file), read internally in the main process, and never logged.
 - **Exported CSV files are hardened against spreadsheet formula injection** (CWE-1236): any exported cell beginning with `=`, `+`, `-`, or `@` is prefixed so Excel/Sheets treat it as plain text. Because imported donor/note data is stored verbatim, treat any CSV you import as untrusted input.
 - **The admin password is stored as a salted scrypt hash** (not SHA-256). The initial password is `admin` — change it from the Admin panel after first use.

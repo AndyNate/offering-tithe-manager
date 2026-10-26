@@ -19,6 +19,13 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// Local wall-clock timestamp for the entry log ('YYYY-MM-DD HH:MM:SS').
+function nowStr() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 function isValidDateStr(s) {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
   const [y, m, d] = s.split('-').map(Number);
@@ -44,6 +51,8 @@ function init(dbPath) {
   }
 
   migrateGivingOnline();
+  migrateGivingCreatedAt();
+  migrateGivingEntryMode();
 
   // Seed settings defaults (default password; changeable in-app later)
   const seed = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
@@ -97,6 +106,27 @@ function migrateGivingOnline() {
       UPDATE sqlite_sequence SET seq = (SELECT COALESCE(MAX(id), 0) FROM giving) WHERE name = 'giving';
     `);
   })();
+}
+
+// v1.x -> entry log: giving rows gain a local-time created_at stamp so the
+// Entry Log can show when each gift was entered. Idempotent: databases that
+// already have the column (fresh schema.sql installs) are untouched, and
+// pre-existing rows keep NULL (shown as a dash in the UI).
+function migrateGivingCreatedAt() {
+  const cols = db.prepare('PRAGMA table_info(giving)').all();
+  if (!cols.length) return;
+  if (cols.some((c) => c.name === 'created_at')) return;
+  db.exec('ALTER TABLE giving ADD COLUMN created_at TEXT');
+}
+
+// v1.4 -> Entry Log session view: remember whether the volunteer typed a Tithe
+// ID or a name, so "This session" can show only what was entered. Idempotent;
+// pre-existing rows keep NULL and fall back to showing both identifiers.
+function migrateGivingEntryMode() {
+  const cols = db.prepare('PRAGMA table_info(giving)').all();
+  if (!cols.length) return;
+  if (cols.some((c) => c.name === 'entry_mode')) return;
+  db.exec("ALTER TABLE giving ADD COLUMN entry_mode VARCHAR(10) CHECK (entry_mode IN ('id', 'name'))");
 }
 
 // Password hashing uses scrypt (a memory-hard KDF) with a per-user random
@@ -302,13 +332,15 @@ function mapGift(row) {
     isFee: !!row.is_fee,
     onlineFeeAmount: row.online_fee_amount, // cents
     notes: row.note || '',
+    entryMode: row.entry_mode || '',
+    createdAt: row.created_at || '',
   };
 }
 
 const GIVING_LIST_SQL = `
   SELECT g.id, g.date, g.tithe_id, d.full_name, g.created_donor, g.total_amount,
          g.regular, g.mission, g.building_fund, g.other, g.giving_type,
-         g.is_fee, g.online_fee_amount, g.note
+         g.is_fee, g.online_fee_amount, g.note, g.entry_mode, g.created_at
   FROM giving g JOIN donors d ON d.tithe_id = g.tithe_id`;
 
 function listGiving(search) {
@@ -317,6 +349,23 @@ function listGiving(search) {
     WHERE (? = '' OR LOWER(d.full_name) LIKE '%' || LOWER(?) || '%' OR CAST(g.tithe_id AS TEXT) LIKE '%' || ? || '%')
     ORDER BY g.date DESC, g.id DESC`;
   return db.prepare(sql).all(s, s, s).map(mapGift);
+}
+
+// Entry Log — every gift recorded against one giving date, in entry order.
+function listGivingByDate(date) {
+  const d = isValidDateStr(date) ? date : todayStr();
+  return db.prepare(`${GIVING_LIST_SQL} WHERE g.date = ? ORDER BY g.id ASC`).all(d).map(mapGift);
+}
+
+// Entry Log — the gifts added during the current app session (ids are tracked
+// in the main process, so edits and deletions stay reflected automatically).
+function listGivingByIds(ids) {
+  const list = (Array.isArray(ids) ? ids : [])
+    .map((n) => Number(n))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  if (!list.length) return [];
+  const placeholders = list.map(() => '?').join(',');
+  return db.prepare(`${GIVING_LIST_SQL} WHERE g.id IN (${placeholders}) ORDER BY g.id ASC`).all(...list).map(mapGift);
 }
 
 function getGift(id) {
@@ -398,12 +447,14 @@ function updateGiving(id, fields) {
 
 function insertGivingRow(run, gift) {
   const info = run.prepare(
-    `INSERT INTO giving (tithe_id, date, giving_type, regular, mission, building_fund, other, note, is_fee, online_fee_amount, created_donor)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO giving (tithe_id, date, giving_type, regular, mission, building_fund, other, note, is_fee, online_fee_amount, created_donor, entry_mode, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     gift.titheId, gift.date, gift.method,
     gift.regular, gift.mission, gift.buildingFund, gift.other,
-    gift.notes || null, gift.isFee ? 1 : 0, gift.onlineFeeAmount || 0, gift.createdDonor ? 1 : 0
+    gift.notes || null, gift.isFee ? 1 : 0, gift.onlineFeeAmount || 0, gift.createdDonor ? 1 : 0,
+    gift.entryMode || null,
+    gift.createdAt || nowStr()
   );
   return Number(info.lastInsertRowid);
 }
@@ -469,6 +520,7 @@ function recordGift(payload, opts = {}) {
       notes: fields.notes,
       isFee: fields.isFee, onlineFeeAmount: fields.feeAmt,
       createdDonor: isNewEntry,
+      entryMode: /^\d+$/.test(input) ? 'id' : 'name',
     });
     return { id, donor: mapDonor(donor), isNewEntry, date: fields.date };
   });
@@ -760,7 +812,7 @@ module.exports = {
   verifyPassword, setPassword, changePassword, isDefaultPassword,
   listDonors, findDonors, getDonorByTitheId, insertDonor, updateDonor, deleteDonor,
   newestEntryDonor, findDonorExact,
-  listGiving, getGift, deleteGiving, recordGift, updateGiving,
+  listGiving, listGivingByDate, listGivingByIds, getGift, deleteGiving, recordGift, updateGiving,
   findGivingDatesByPerson, findGivingByPersonAndDate,
   monthReport, yearReport, otherReport, fundTotals,
   listDeposits, insertDeposit, deleteDeposit, titheSheetTotal, markDepositEmailed,

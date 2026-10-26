@@ -10,6 +10,14 @@ let win = null;
 let authed = false;
 let currentDbPath = null;
 
+// Ids of gifts added through the Give form during this app run. The Entry Log's
+// "This session" view reads these, and non-admins may only delete ids in here.
+// Cleared on deposit save, database switch, and app restart.
+const sessionGivingIds = new Set();
+function resetSessionGiving() {
+  sessionGivingIds.clear();
+}
+
 // --- database file selection -------------------------------------------------
 // Priority: --db CLI argument > OTM_DB_PATH env var > remembered choice
 // (db-choice.json in userData) > default location.
@@ -144,10 +152,26 @@ handle('donors:delete', ({ titheId }) => {
 
 // giving — recordGift honors the real session state server-side
 handle('giving:list', ({ search }) => db.listGiving(search));
-handle('giving:recordGift', (payload) => db.recordGift(payload, { isAdmin: authed }));
+handle('giving:listByDate', ({ date }) => {
+  requireAdmin(); // Whole day is an admin view
+  return db.listGivingByDate(date);
+});
+handle('giving:listSession', () => db.listGivingByIds([...sessionGivingIds]));
+handle('giving:recordGift', (payload) => {
+  const res = db.recordGift(payload, { isAdmin: authed });
+  sessionGivingIds.add(res.id);
+  return res;
+});
 handle('giving:delete', ({ id }) => {
-  requireAdmin();
-  return db.deleteGiving(id);
+  const giftId = Number(id);
+  // Admins may remove any gift. Volunteers may only remove entries they added
+  // during this session — enforced here, not just by hiding the button.
+  if (!authed && !sessionGivingIds.has(giftId)) {
+    throw new Error('You can only delete entries you added in this session \u2014 ask an admin to remove older entries.');
+  }
+  const changes = db.deleteGiving(giftId);
+  sessionGivingIds.delete(giftId);
+  return changes;
 });
 handle('giving:findDates', ({ search }) => db.findGivingDatesByPerson(search));
 handle('giving:findByPersonDate', ({ search, date }) => db.findGivingByPersonAndDate(search, date));
@@ -165,7 +189,12 @@ handle('report:funds', ({ year, month }) => db.fundTotals(year, month));
 // deposits
 handle('deposit:list', () => db.listDeposits());
 handle('deposit:titheSheetTotal', ({ date }) => db.titheSheetTotal(date));
-handle('deposit:insert', (payload) => db.insertDeposit(payload, { isAdmin: authed }));
+handle('deposit:insert', (payload) => {
+  const saved = db.insertDeposit(payload, { isAdmin: authed });
+  // A saved deposit closes the current batch; the next session view starts empty.
+  resetSessionGiving();
+  return saved;
+});
 handle('deposit:delete', ({ depositNumber }) => {
   requireAdmin();
   return db.deleteDeposit(depositNumber);

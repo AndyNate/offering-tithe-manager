@@ -126,7 +126,7 @@ t('admin unlock: E-Transfer + custom date respected', () => {
   assert.strictEqual(r.donation.date, '2026-08-15');
 });
 t('Online fee recorded as fee row fields', () => {
-  const r = db.recordGift({ name: 'Cara Cole', regular: 5000, method: 'Online', onlineFee: 175 }, { isAdmin: true });
+  const r = db.recordGift({ name: 'Cara Cole', regular: 5000, method: 'Online', onlineFee: 175, date: '2026-08-18' }, { isAdmin: true });
   assert.strictEqual(r.donation.isFee, true);
   assert.strictEqual(r.donation.onlineFeeAmount, 175);
 });
@@ -140,18 +140,50 @@ t('negative amount rejected', () => {
   assert.throws(() => db.recordGift({ name: 'Cara Cole', regular: -5 }, {}), /negative/);
 });
 
+// ---- entry log queries
+t('giving rows get a local created_at stamp', () => {
+  const r = db.recordGift({ name: 'Cara Cole', regular: 1000, date: '2020-07-04' }, { isAdmin: true });
+  assert.ok(r.donation.createdAt, 'createdAt is returned');
+  assert.match(r.donation.createdAt, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+  const day = db.listGivingByDate('2020-07-04');
+  assert.strictEqual(day.length, 1);
+  assert.strictEqual(day[0].id, r.donation.id);
+  assert.strictEqual(day[0].createdAt, r.donation.createdAt);
+});
+t('recordGift remembers whether a Tithe ID or a name was typed', () => {
+  // Fixed 2020 date so these extra rows don't disturb the 2026 report checks.
+  const byName = db.recordGift({ name: 'Cara Cole', regular: 700, date: '2020-07-07' }, { isAdmin: true });
+  assert.strictEqual(byName.donation.entryMode, 'name');
+  const byId = db.recordGift({ name: '1', regular: 700, date: '2020-07-07' }, { isAdmin: true });
+  assert.strictEqual(byId.donation.entryMode, 'id');
+  assert.strictEqual(byId.donation.titheId, '1');
+  assert.strictEqual(byId.donation.fullName, 'Alice Anderson-Smith', 'donor is still resolved for Whole day');
+  assert.strictEqual(db.listGivingByIds([byId.donation.id])[0].entryMode, 'id');
+});
+t('listGivingByDate filters by date, orders by entry id, and falls back to today', () => {
+  const a = db.recordGift({ name: 'Cara Cole', regular: 100, date: '2020-07-05' }, { isAdmin: true });
+  const b = db.recordGift({ name: 'Cara Cole', regular: 200, date: '2020-07-06' }, { isAdmin: true });
+  const c = db.recordGift({ name: 'Cara Cole', regular: 300, date: '2020-07-05' }, { isAdmin: true });
+  assert.deepStrictEqual(db.listGivingByDate('2020-07-05').map((g) => g.id), [a.donation.id, c.donation.id]);
+  assert.deepStrictEqual(db.listGivingByDate('2020-07-06').map((g) => g.id), [b.donation.id]);
+  const fallback = db.listGivingByDate('');
+  assert.ok(fallback.every((g) => g.date === db.todayStr()), 'invalid date falls back to today');
+
+  const session = db.listGivingByIds([c.donation.id, a.donation.id, 999999, 'nope']);
+  assert.deepStrictEqual(session.map((g) => g.id), [a.donation.id, c.donation.id]);
+  assert.deepStrictEqual(db.listGivingByIds([]), []);
+  assert.deepStrictEqual(db.listGivingByIds(null), []);
+});
+
 // ---- reports (fixed month: 2026-08)
-// so far: Cara Cole cash 2500 + 1000 + 3000 + 5000(+fee 175) = 11500; yearReport adds fee -> 11675 for her
-// ---- reports (fixed month: 2026-08)
-// gifts so far: Cara cash 2500, cara cash 1000, non-admin-locked cash 1000,
-// etransfer 3000 (08-15), online 5000(+fee 175), Dan cash 4000+500+250+250
+// Report gifts carry explicit dates so these checks don't depend on today's date.
 t('monthReport aggregates by method in cents', () => {
-  db.recordGift({ name: 'Dan Diaz', regular: 4000, mission: 500, buildingFund: 250, other: 250, notes: 'ladies event' }, { isAdmin: true });
+  db.recordGift({ name: 'Dan Diaz', regular: 4000, mission: 500, buildingFund: 250, other: 250, notes: 'ladies event', date: '2026-08-20' }, { isAdmin: true });
   const rep = db.monthReport('2026', '8');
-  assert.strictEqual(rep.cashCheque, 2500 + 1000 + 1000 + 5000);
+  assert.strictEqual(rep.cashCheque, 4000 + 500 + 250 + 250);
   assert.strictEqual(rep.eTransfer, 3000);
   assert.strictEqual(rep.online, 5000);
-  assert.strictEqual(rep.grandTotal, 9500 + 3000 + 5000);
+  assert.strictEqual(rep.grandTotal, 5000 + 3000 + 5000);
 });
 t('monthReport counts unique donors (distinct tithe_id)', () => {
   const before = db.monthReport('2026', '8').totalDonors;
@@ -163,14 +195,16 @@ t('monthReport counts unique donors (distinct tithe_id)', () => {
 });
 t('fundTotals sums per fund', () => {
   const f = db.fundTotals('2026', '8');
-  assert.strictEqual(f.regular, 2500 + 1000 + 1000 + 3000 + 5000 + 4000);
-  assert.strictEqual(f.mission, 500);
+  // E-Transfer 3000 + Online 5000 + Dan 4000 + Hank 1000+2000
+  assert.strictEqual(f.regular, 15000);
+  // Dan 500 + Iris 500
+  assert.strictEqual(f.mission, 1000);
   assert.strictEqual(f.buildingFund, 250);
   assert.strictEqual(f.other, 250);
 });
 t('otherReport lists noted donations with fund breakdown', () => {
-  db.recordGift({ name: 'Dawn Donor', regular: 2000, mission: 4020, notes: 'mcathy missionary' }, { isAdmin: true });
-  db.recordGift({ name: 'Zed Quiet', regular: 1000, notes: '' }, { isAdmin: true });
+  db.recordGift({ name: 'Dawn Donor', regular: 2000, mission: 4020, notes: 'mcathy missionary', date: '2026-08-22' }, { isAdmin: true });
+  db.recordGift({ name: 'Zed Quiet', regular: 1000, notes: '', date: '2026-08-22' }, { isAdmin: true });
   const o = db.otherReport('2026', '8');
   const ladies = o.entries.find((e) => e.note === 'ladies event');
   assert.ok(ladies, 'noted regular/mission/building/other row included');
