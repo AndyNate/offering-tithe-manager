@@ -687,7 +687,7 @@ function recordGift(payload, opts = {}) {
         ).run(titheId, fields.date, input);
         donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(titheId);
         isNewEntry = true;
-      } else if (matches.length === 1) {
+      } else if (matches.length === 1 || (matches[0].score >= FUZZY_CONFIG.autoCorrectThreshold && (!matches[1] || matches[1].score < FUZZY_CONFIG.ambiguousThreshold))) {
         const match = matches[0];
         // Use existing person's correct name and unique ID, flag for admin review
         donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(match.donor.titheId);

@@ -20,7 +20,7 @@
     "start": "electron .",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-rebuild -f -w better-sqlite3 || echo \"electron-rebuild skipped (prebuilt binary may already match)\"",
-    "test:db": "electron --no-sandbox test/db.test.js && electron --no-sandbox test/migration.test.js",
+    "test:db": "electron --no-sandbox test/db.test.js && electron --no-sandbox test/migration.test.js && electron --no-sandbox test/fuzzy.test.js",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win --publish never",
     "dist:mac": "electron-builder --mac --publish never",
