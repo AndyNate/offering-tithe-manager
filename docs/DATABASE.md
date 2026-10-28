@@ -10,6 +10,7 @@ The live schema (created by `app/db.js`) contains:
 - `giving`: `id` (PK), `tithe_id` (FK), `date`, `giving_type`, `regular`, `mission`, `building_fund`, `other`, `total_amount` (generated), `note`, `is_fee`, `online_fee_amount`, `created_donor`, `entry_mode` (`'id'` or `'name'` — what the volunteer typed, used by the Entry Log session view; NULL for rows that predate v1.4 or come from CSV import), `created_at` (local `YYYY-MM-DD HH:MM:SS` stamp used by the Entry Log; NULL for rows that predate v1.4).
 - `deposits`: `deposit_number` (unique), `date`, `teller1`, `teller2`, `cash_subtotal`, `cheques_subtotal`, `total`, `tithe_sheet_total`, `counts_json`, `cheques_json`, `emailed_to`.
 - `settings`: key/value store (hashed admin password, Brevo API key/sender).
+- `name_reviews`: `id` (PK), `giving_id` (FK → giving), `original_name`, `proposed_name`, `matched_tithe_id`, `confidence`, `reason`, `review_status` (`'pending'`/`'approved'`/`'rejected'`), `reviewed_by`, `reviewed_at`, `created_at`, `matches_json`.
 
 ## Notes
 

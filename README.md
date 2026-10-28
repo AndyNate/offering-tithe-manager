@@ -36,23 +36,7 @@ Built with **Electron 44** and **better-sqlite3** (React 18 renderer, vendored l
 ## Screenshots
 
 <p align="center">
-  <table>
-    <tr>
-      <td><p align="center"><img src="screenshots/1.png" width="300" alt="Give (entry) form"/></p></td>
-      <td><p align="center"><img src="screenshots/2.png" width="300" alt="Admin panel"/></p></td>
-      <td><p align="center"><img src="screenshots/3.png" width="300" alt="Search / edit donor / deposits"/></p></td>
-    </tr>
-    <tr>
-      <td><p align="center"><img src="screenshots/4.png" width="300" alt="Month-end report / fund totals"/></p></td>
-      <td><p align="center"><img src="screenshots/5.png" width="300" alt="Year-end report / giving table"/></p></td>
-      <td><p align="center"><img src="screenshots/6.png" width="300" alt="Admin mode / Give (entry) form"/></p></td>
-    </tr>
-    <tr>
-      <td><p align="center"><img src="screenshots/7.png" width="300" alt="Admin mode / Give (entry) form E-Transfer"/></p></td>
-      <td><p align="center"><img src="screenshots/8.png" width="300" alt="Admin mode / Give (entry) form Online"/></p></td>
-      <td></td>
-    </tr>
-  </table>
+  <img src="gif/layout.gif" alt="App layout overview" />
 </p>
 
 ## Download
@@ -66,12 +50,13 @@ Built with **Electron 44** and **better-sqlite3** (React 18 renderer, vendored l
 All builds are the same app — for the full guide and unsigned-build first-run warnings, see ["Which release file should I download?"](#which-release-file-should-i-download).
 
 ## Give (entry) form
-- Single **Full name or Tithe ID** field — matched against the donors table; unmatched names auto-create a donor with the lowest unused Tithe ID (starting at `1`, so numbers freed by deleted donors are reused); an unmatched numeric input errors with "Tithe ID doesn't exist."
+- Single **Full name or Tithe ID** field — matched against the donors table. An exact Tithe ID or exact name match reuses that donor. A name with no exact match is fuzzy-matched against existing donors (Jaro–Winkler + Levenshtein, conservative thresholds): a single close match attributes the gift to that donor under their stored spelling and queues a **name-matching review** for an admin; several close matches create a provisional new donor with the typed spelling and queue an ambiguous review; no close match auto-creates a donor with the lowest unused Tithe ID (starting at `1`, so numbers freed by deleted donors are reused). An unmatched numeric input errors with "Tithe ID doesn't exist."
 - **Giving date** field — only shown/editable after admin sign-in; otherwise defaults to today.
 - Donation split into four fields — **Regular, Mission, Building fund, Other** — with a live running total.
 - **Payment method**: Cash / Cheque, E-Transfer, Online (locked to Cash / Cheque unless signed in as admin).
 - Selecting **Online** reveals an **Online fee** field — enter whatever processing fee the online giving provider charged.
 - **Notes** become required whenever an Other amount is entered.
+- Fuzzy matching is conservative (≈0.7+ similarity) and never silently merges donors without recording a review that an admin can approve, reject, or confirm as a new person.
 - On **Submit** the gift is saved and the form immediately resets with empty fields, ready for the next entry (no confirmation screen).
 
 ## Entry Log
@@ -91,6 +76,7 @@ After signing in with the password (`admin` — **change it from the Settings ta
 - **Deposits**: a "New deposit" flow recording deposit number, date, teller names, cash/cheques subtotals, tithe-sheet totals, and per-denomination counts (with a printable/count sheet template, `deposit-template.xlsx`). The New deposit dialog fits on screen without scrolling and is click-to-save only (the Enter key never submits it). Deposits can be recorded without signing in as admin — non-admins get an auto-generated read-only deposit number and today's date; admins can edit the deposit number, send report emails, and delete deposits (see [Emails (deposit reports)](#emails-deposit-reports)).
 - **Deposits table**: searchable by deposit # or date.
 - **Donations table**: searchable by name or Tithe ID — date, Tithe ID, name (with a "New" badge for first-time donors), amount, method, fee, notes, and per-row Delete.
+- **Name matching reviews**: a card listing pending name matches produced by the Give form's fuzzy matching — each shows the typed spelling → proposed donor, reason, confidence, and gift date, with **Approve correction**, **Reject (keep original)**, and **Confirm as new person** actions. Original spelling is always preserved in the review record.
 
 **Reports tab**
 - **Month-end report**: month/year picker with Cash/Cheque, E-Transfer, Online and grand totals, plus an "Other donations report" listing each noted donation (any fund — Regular/Mission/Building fund/Other) with its amount breakdown and the entered note.
@@ -211,6 +197,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 
 - **Admin authorization is enforced in the main process**, not just hidden in the UI. Destructive/admin actions (deleting donors/gifts/deposits, editing giving, CSV import, settings changes) require a valid admin session server-side; the renderer cannot bypass these by calling the exposed IPC methods directly.
 - **Entry Log deletion follows the same rule.** A non-admin may only delete gift ids added through the Give form during the current app run; the main process rejects anything older. Saving a deposit clears the session list (the gift records themselves stay in the database). **Whole day** — including its date picker and Tithe ID/name columns — is admin-only, and the main process refuses day queries from a signed-out renderer.
+- **Name-matching reviews are admin-only.** Fuzzy matching on the Give form may attribute a gift to an existing donor and record a review; listing, approving, and rejecting reviews require an authenticated admin session in the main process (`reviews:*` IPC handlers call `requireAdmin()`).
 - **Email sending is available to all sessions** — non-admin volunteers can record a deposit and send its report email. The raw **Brevo API key is only surfaced to an authenticated admin session**; it is stored in the SQLite `settings` table (not a plaintext file), read internally in the main process, and never logged.
 - **Exported CSV files are hardened against spreadsheet formula injection** (CWE-1236): any exported cell beginning with `=`, `+`, `-`, or `@` is prefixed so Excel/Sheets treat it as plain text. Because imported donor/note data is stored verbatim, treat any CSV you import as untrusted input.
 - **The admin password is stored as a salted scrypt hash** (not SHA-256). The initial password is `admin` — change it from the Admin panel after first use.
@@ -224,7 +211,7 @@ Every pull request runs automated security scans (secrets, code patterns, depend
 - `changelog.md` — the maintainer's working change log; kept locally (git-ignored via `.gitignore`, since it records AI-assisted work) and not part of a cloned checkout.
 - `CONTRIBUTING.md` — how to contribute (dev setup, PR checks); linked from the License section.
 - `docs/DATABASE.md` — full database schema and storage details.
-- `screenshots/` — the eight screenshots shown in the preview table at the top of this README.
+- `gif/` — app screenshots, including `layout.gif` shown in the preview above.
 - `SECURITY.md` — security policy; how to report a vulnerability.
 - `app/schema.sql` — SQLite DDL executed by `app/db.js` when a fresh database is created; `db.js` remains the behavioral source of truth (all migrations live there).
 - `overall_licensing/` — license documents and third-party notices.
