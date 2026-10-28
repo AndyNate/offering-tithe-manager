@@ -1,7 +1,7 @@
 {
   "name": "offering-tithe-program",
   "productName": "Offering & Tithe Management Program",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Offering and tithe management desktop app (Electron + SQLite)",
   "author": {
     "name": "Nathan Allen",

@@ -220,6 +220,24 @@ handle('csv:importGiving', (rows) => {
   return db.importGiving(rows);
 });
 
+// name reviews (fuzzy matching)
+handle('reviews:list', ({ status }) => {
+  requireAdmin();
+  return db.listNameReviews(status);
+});
+handle('reviews:approve', ({ reviewId, options }) => {
+  requireAdmin();
+  return db.approveNameReview(reviewId, options || {});
+});
+handle('reviews:reject', ({ reviewId, options }) => {
+  requireAdmin();
+  return db.rejectNameReview(reviewId, options || {});
+});
+handle('reviews:fuzzyFind', ({ input }) => {
+  requireAdmin();
+  return db.findFuzzyMatches(input);
+});
+
 // settings
 // The Brevo API key and sender are only surfaced to authenticated admin sessions.
 // Non-admin volunteers can still send deposit emails (the key is read internally
