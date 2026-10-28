@@ -32,6 +32,22 @@ CREATE TABLE giving (
 
 CREATE INDEX idx_giving_tithe_id ON giving (tithe_id);
 
+CREATE TABLE IF NOT EXISTS name_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    giving_id INTEGER REFERENCES giving(id) ON DELETE CASCADE,
+    original_name TEXT NOT NULL,
+    proposed_name TEXT,
+    matched_tithe_id VARCHAR(20),
+    confidence REAL,
+    reason TEXT,
+    review_status TEXT NOT NULL DEFAULT 'pending' CHECK (review_status IN ('pending','approved','rejected')),
+    reviewed_by TEXT,
+    reviewed_at TEXT,
+    created_at TEXT NOT NULL,
+    matches_json TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_name_reviews_status ON name_reviews (review_status);
+
 CREATE TABLE deposits (
     deposit_number   VARCHAR(10) PRIMARY KEY,
     date             DATE NOT NULL,                -- 'YYYY-MM-DD'

@@ -396,9 +396,9 @@ t('updateGiving rejects zero total', () => {
   }), /greater than zero/);
 });
 t('updateGiving allows reassigning tithe_id to another donor', () => {
-  const r1 = db.recordGift({ name: 'Alice Anderson-Smith', regular: 800 }, { isAdmin: true });
+  const r1 = db.recordGift({ name: 'Zelda Zephyr', regular: 800 }, { isAdmin: true });
   const r2 = db.recordGift({ name: 'Dan Diaz', regular: 600 }, { isAdmin: true });
-  // Reassign Dan's gift to Alice
+  // Reassign Dan's gift to Zelda
   const updated = db.updateGiving(r2.donation.id, {
     titheId: r1.donation.titheId,
     date: r2.donation.date,
@@ -406,7 +406,7 @@ t('updateGiving allows reassigning tithe_id to another donor', () => {
     regular: 600, mission: 0, buildingFund: 0, other: 0,
   });
   assert.strictEqual(updated.titheId, r1.donation.titheId);
-  assert.strictEqual(updated.fullName, 'Alice Anderson-Smith');
+  assert.strictEqual(updated.fullName, 'Zelda Zephyr');
 });
 
 // ---- backup

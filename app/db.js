@@ -53,6 +53,7 @@ function init(dbPath) {
   migrateGivingOnline();
   migrateGivingCreatedAt();
   migrateGivingEntryMode();
+  migrateNameReviews();
 
   // Seed settings defaults (default password; changeable in-app later)
   const seed = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
@@ -129,12 +130,131 @@ function migrateGivingEntryMode() {
   db.exec("ALTER TABLE giving ADD COLUMN entry_mode VARCHAR(10) CHECK (entry_mode IN ('id', 'name'))");
 }
 
+// v1.5 -> fuzzy name matching review queue. Idempotent.
+function migrateNameReviews() {
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='name_reviews'").all();
+  if (tables.length) return;
+  db.exec(`
+    CREATE TABLE name_reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      giving_id INTEGER REFERENCES giving(id) ON DELETE CASCADE,
+      original_name TEXT NOT NULL,
+      proposed_name TEXT,
+      matched_tithe_id VARCHAR(20),
+      confidence REAL,
+      reason TEXT,
+      review_status TEXT NOT NULL DEFAULT 'pending' CHECK (review_status IN ('pending','approved','rejected')),
+      reviewed_by TEXT,
+      reviewed_at TEXT,
+      created_at TEXT NOT NULL,
+      matches_json TEXT
+    );
+    CREATE INDEX idx_name_reviews_status ON name_reviews (review_status);
+  `);
+}
+
 // Password hashing uses scrypt (a memory-hard KDF) with a per-user random
 // salt, encoded as "scrypt$<salt-hex>$<derivedkey-hex>".
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const derivedKey = crypto.scryptSync(String(password), salt, 32);
   return 'scrypt$' + salt + '$' + derivedKey.toString('hex');
+}
+
+// Fuzzy matching configuration (conservative thresholds)
+const FUZZY_CONFIG = {
+  autoCorrectThreshold: 0.88, // high confidence for auto-correction
+  ambiguousThreshold: 0.75,   // below this and not exact -> likely new person
+  minMatchThreshold: 0.7      // minimum similarity to consider
+};
+
+function normalizeName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function levenshtein(a, b) {
+  const s1 = normalizeName(a);
+  const s2 = normalizeName(b);
+  if (s1.length === 0) return s2.length;
+  if (s2.length === 0) return s1.length;
+  const matrix = [];
+  for (let i = 0; i <= s2.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= s1.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= s2.length; i++) {
+    for (let j = 1; j <= s1.length; j++) {
+      if (s2.charAt(i - 1) === s1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        if (i > 1 && j > 1 && s2.charAt(i - 2) === s1.charAt(j - 1) && s2.charAt(i - 1) === s1.charAt(j - 2)) {
+          matrix[i][j] = matrix[i - 2][j - 2] + 1;
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+          );
+        }
+      }
+    }
+  }
+  return matrix[s2.length][s1.length];
+}
+
+function similarityScore(a, b) {
+  const s1 = normalizeName(a);
+  const s2 = normalizeName(b);
+  if (s1 === s2) return 1.0;
+  const maxLen = Math.max(s1.length, s2.length);
+  if (maxLen === 0) return 1.0;
+  const dist = levenshtein(a, b);
+  return 1.0 - dist / maxLen;
+}
+
+function jaroWinkler(s1, s2) {
+  s1 = normalizeName(s1);
+  s2 = normalizeName(s2);
+  if (s1 === s2) return 1.0;
+  const len1 = s1.length;
+  const len2 = s2.length;
+  if (len1 === 0 || len2 === 0) return 0.0;
+  const matchDistance = Math.floor(Math.max(len1, len2) / 2) - 1;
+  const s1Matches = new Array(len1).fill(false);
+  const s2Matches = new Array(len2).fill(false);
+  let matches = 0;
+  for (let i = 0; i < len1; i++) {
+    const start = Math.max(0, i - matchDistance);
+    const end = Math.min(i + matchDistance + 1, len2);
+    for (let j = start; j < end; j++) {
+      if (s2Matches[j] || s1[i] !== s2[j]) continue;
+      s1Matches[i] = true;
+      s2Matches[j] = true;
+      matches++;
+      break;
+    }
+  }
+  if (matches === 0) return 0.0;
+  let t = 0;
+  let k = 0;
+  for (let i = 0; i < len1; i++) {
+    if (!s1Matches[i]) continue;
+    while (!s2Matches[k]) k++;
+    if (s1[i] !== s2[k]) t++;
+    k++;
+  }
+  let jaro = (matches / len1 + matches / len2 + (matches - t / 2) / matches) / 3.0;
+  let prefix = 0;
+  for (let i = 0; i < Math.min(len1, len2, 4); i++) {
+    if (s1[i] === s2[i]) prefix++;
+    else break;
+  }
+  return jaro + prefix * 0.1 * (1 - jaro);
 }
 
 function verifyPasswordHash(password, stored) {
@@ -487,6 +607,47 @@ function validateGiftFields(gift, { allowNonCash, allowCustomDate }) {
   return { regular, mission, buildingFund, other, total, method, feeAmt, isFee, notes, date };
 }
 
+function findFuzzyMatches(input) {
+  const inputNorm = normalizeName(input);
+  if (!inputNorm) return [];
+  const donors = db.prepare(`SELECT ${DONOR_COLS} FROM donors`).all();
+  const matches = [];
+  for (const donor of donors) {
+    const donorNorm = normalizeName(donor.full_name);
+    if (donorNorm === inputNorm) {
+      matches.push({ donor: mapDonor(donor), score: 1.0, type: 'exact' });
+      continue;
+    }
+    const jw = jaroWinkler(input, donor.full_name);
+    const lev = similarityScore(input, donor.full_name);
+    const score = Math.max(jw, lev);
+    if (score >= FUZZY_CONFIG.minMatchThreshold) {
+      matches.push({ donor: mapDonor(donor), score, type: 'fuzzy' });
+    }
+  }
+  matches.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return 0;
+  });
+  return matches;
+}
+
+function createNameReview({ givingId, originalName, proposedName, matchedTitheId, confidence, reason, matches }) {
+  db.prepare(
+    `INSERT INTO name_reviews (giving_id, original_name, proposed_name, matched_tithe_id, confidence, reason, review_status, created_at, matches_json)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`
+  ).run(
+    givingId || null,
+    originalName,
+    proposedName || null,
+    matchedTitheId || null,
+    confidence || null,
+    reason || null,
+    nowStr(),
+    matches ? JSON.stringify(matches) : null
+  );
+}
+
 // The whole Give-form submit, atomic: find-or-create donor, then insert the gift.
 function recordGift(payload, opts = {}) {
   const input = String(payload.name || '').trim();
@@ -498,18 +659,63 @@ function recordGift(payload, opts = {}) {
   });
 
   const tx = db.transaction(() => {
-    let donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ? COLLATE NOCASE`).get(input)
-      || db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE LOWER(full_name) = LOWER(?)`).get(input);
-
+    // First check exact match by tithe_id
+    let donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ? COLLATE NOCASE`).get(input);
+    
     let isNewEntry = false;
+    let reviewInfo = null;
+    
     if (!donor) {
-      if (/^\d+$/.test(input)) throw new AppError('Tithe ID doesn\u2019t exist.', 'no-tithe-id');
-      const titheId = nextTitheIdTx();
-      db.prepare(
-        `INSERT INTO donors (tithe_id, date, full_name, spouse, email, notes, is_new_entry) VALUES (?, ?, ?, '', '', '', 1)`
-      ).run(titheId, fields.date, input);
-      donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(titheId);
-      isNewEntry = true;
+      // Check exact name match
+      donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE LOWER(full_name) = LOWER(?)`).get(input);
+    }
+    
+    if (!donor && /^\d+$/.test(input)) {
+      // Numeric input that doesn't match tithe_id
+      throw new AppError('Tithe ID doesn\u2019t exist.', 'no-tithe-id');
+    }
+    
+    if (!donor && !/^\d+$/.test(input)) {
+      // Try fuzzy matching for names
+      const matches = findFuzzyMatches(input);
+      
+      if (matches.length === 0) {
+        // Genuinely new person
+        const titheId = nextTitheIdTx();
+        db.prepare(
+          `INSERT INTO donors (tithe_id, date, full_name, spouse, email, notes, is_new_entry) VALUES (?, ?, ?, '', '', '', 1)`
+        ).run(titheId, fields.date, input);
+        donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(titheId);
+        isNewEntry = true;
+      } else if (matches.length === 1) {
+        const match = matches[0];
+        // Use existing person's correct name and unique ID, flag for admin review
+        donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(match.donor.titheId);
+        reviewInfo = {
+          originalName: input,
+          proposedName: match.donor.fullName,
+          matchedTitheId: match.donor.titheId,
+          confidence: match.score,
+          reason: match.score >= FUZZY_CONFIG.autoCorrectThreshold ? 'auto_corrected_misspelling' : 'potential_match_review',
+          matches: matches
+        };
+      } else {
+        // Multiple matches - ambiguous
+        const titheId = nextTitheIdTx();
+        db.prepare(
+          `INSERT INTO donors (tithe_id, date, full_name, spouse, email, notes, is_new_entry) VALUES (?, ?, ?, '', '', '', 1)`
+        ).run(titheId, fields.date, input); // Provisional record with original name
+        donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(titheId);
+        isNewEntry = true;
+        reviewInfo = {
+          originalName: input,
+          proposedName: null,
+          matchedTitheId: null,
+          confidence: matches[0].score,
+          reason: 'ambiguous_matches',
+          matches: matches
+        };
+      }
     }
 
     const id = insertGivingRow(db, {
@@ -522,6 +728,19 @@ function recordGift(payload, opts = {}) {
       createdDonor: isNewEntry,
       entryMode: /^\d+$/.test(input) ? 'id' : 'name',
     });
+    
+    if (reviewInfo) {
+      createNameReview({
+        givingId: id,
+        originalName: reviewInfo.originalName,
+        proposedName: reviewInfo.proposedName,
+        matchedTitheId: reviewInfo.matchedTitheId,
+        confidence: reviewInfo.confidence,
+        reason: reviewInfo.reason,
+        matches: reviewInfo.matches
+      });
+    }
+    
     return { id, donor: mapDonor(donor), isNewEntry, date: fields.date };
   });
 
@@ -799,6 +1018,116 @@ function importGiving(records) {
 }
 
 // ---------------------------------------------------------------------------
+// Name Reviews
+
+function listNameReviews(status = null) {
+  let sql = `
+    SELECT nr.*, g.date as gift_date, g.regular, g.mission, g.building_fund, g.other, g.total_amount,
+           d.full_name as current_donor_name
+    FROM name_reviews nr
+    LEFT JOIN giving g ON g.id = nr.giving_id
+    LEFT JOIN donors d ON d.tithe_id = g.tithe_id
+  `;
+  const params = [];
+  if (status) {
+    sql += ' WHERE nr.review_status = ?';
+    params.push(status);
+  }
+  sql += ' ORDER BY nr.created_at DESC';
+  const rows = db.prepare(sql).all(...params);
+  return rows.map(row => ({
+    id: row.id,
+    givingId: row.giving_id,
+    originalName: row.original_name,
+    proposedName: row.proposed_name,
+    matchedTitheId: row.matched_tithe_id,
+    confidence: row.confidence,
+    reason: row.reason,
+    status: row.review_status,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at,
+    createdAt: row.created_at,
+    matches: row.matches_json ? JSON.parse(row.matches_json) : [],
+    giftDate: row.gift_date,
+    giftTotal: row.total_amount,
+    currentDonorName: row.current_donor_name
+  }));
+}
+
+function approveNameReview(reviewId, options = {}) {
+  const review = db.prepare('SELECT * FROM name_reviews WHERE id = ?').get(reviewId);
+  if (!review) throw new AppError('Review not found.');
+  if (review.review_status !== 'pending') throw new AppError('Review already processed.');
+  
+  const tx = db.transaction(() => {
+    if (options.assignToTitheId) {
+      // Assign to a different existing person
+      const donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(options.assignToTitheId);
+      if (!donor) throw new AppError('Donor not found.');
+      if (review.giving_id) {
+        db.prepare('UPDATE giving SET tithe_id = ? WHERE id = ?').run(donor.tithe_id, review.giving_id);
+      }
+    } else if (options.confirmNewPerson) {
+      // Confirm as genuinely new person: create donor with original name and reassign gift
+      const gift = review.giving_id ? db.prepare('SELECT * FROM giving WHERE id = ?').get(review.giving_id) : null;
+      const giftDate = gift ? gift.date : todayStr();
+      // Check if donor with original name already exists
+      let newDonor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE LOWER(full_name) = LOWER(?)`).get(review.original_name);
+      if (!newDonor) {
+        const titheId = nextTitheIdTx();
+        db.prepare(
+          `INSERT INTO donors (tithe_id, date, full_name, spouse, email, notes, is_new_entry) VALUES (?, ?, ?, '', '', '', 1)`
+        ).run(titheId, giftDate, review.original_name);
+        newDonor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(titheId);
+      }
+      if (review.giving_id) {
+        db.prepare('UPDATE giving SET tithe_id = ? WHERE id = ?').run(newDonor.tithe_id, review.giving_id);
+      }
+    } else if (review.proposed_name && review.matched_tithe_id) {
+      // Approve suggested correction - reassign gift to matched donor
+      if (review.giving_id) {
+        const donor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(review.matched_tithe_id);
+        if (donor) {
+          db.prepare('UPDATE giving SET tithe_id = ? WHERE id = ?').run(donor.tithe_id, review.giving_id);
+        }
+      }
+    }
+    
+    db.prepare("UPDATE name_reviews SET review_status = 'approved', reviewed_by = ?, reviewed_at = ? WHERE id = ?")
+      .run(options.reviewedBy || 'admin', nowStr(), reviewId);
+  });
+  
+  tx();
+  return { ok: true };
+}
+
+function rejectNameReview(reviewId, options = {}) {
+  const review = db.prepare('SELECT * FROM name_reviews WHERE id = ?').get(reviewId);
+  if (!review) throw new AppError('Review not found.');
+  if (review.review_status !== 'pending') throw new AppError('Review already processed.');
+  
+  // Reject suggested correction: create new donor with original name and reassign gift
+  const tx = db.transaction(() => {
+    const gift = review.giving_id ? db.prepare('SELECT * FROM giving WHERE id = ?').get(review.giving_id) : null;
+    const giftDate = gift ? gift.date : todayStr();
+    let newDonor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE LOWER(full_name) = LOWER(?)`).get(review.original_name);
+    if (!newDonor) {
+      const titheId = nextTitheIdTx();
+      db.prepare(
+        `INSERT INTO donors (tithe_id, date, full_name, spouse, email, notes, is_new_entry) VALUES (?, ?, ?, '', '', '', 1)`
+      ).run(titheId, giftDate, review.original_name);
+      newDonor = db.prepare(`SELECT ${DONOR_COLS} FROM donors WHERE tithe_id = ?`).get(titheId);
+    }
+    if (review.giving_id) {
+      db.prepare('UPDATE giving SET tithe_id = ? WHERE id = ?').run(newDonor.tithe_id, review.giving_id);
+    }
+    db.prepare("UPDATE name_reviews SET review_status = 'rejected', reviewed_by = ?, reviewed_at = ? WHERE id = ?")
+      .run(options.reviewedBy || 'admin', nowStr(), reviewId);
+  });
+  tx();
+  return { ok: true };
+}
+
 // Backup
 
 function backupTo(destPath) {
@@ -817,5 +1146,6 @@ module.exports = {
   monthReport, yearReport, otherReport, fundTotals,
   listDeposits, insertDeposit, deleteDeposit, titheSheetTotal, markDepositEmailed,
   importDonors, importGiving,
+  listNameReviews, approveNameReview, rejectNameReview, findFuzzyMatches,
   backupTo,
 };

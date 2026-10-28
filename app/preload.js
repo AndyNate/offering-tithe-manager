@@ -55,6 +55,12 @@ contextBridge.exposeInMainWorld('db', {
   setEmailRecipients: (list) => ipcRenderer.invoke('settings:setRecipients', { list }),
   sendDepositEmail: (payload) => ipcRenderer.invoke('email:sendDeposit', payload),
 
+  // name reviews
+  listNameReviews: (status) => ipcRenderer.invoke('reviews:list', { status }),
+  approveNameReview: (reviewId, options) => ipcRenderer.invoke('reviews:approve', { reviewId, options }),
+  rejectNameReview: (reviewId, options) => ipcRenderer.invoke('reviews:reject', { reviewId, options }),
+  fuzzyFindDonors: (input) => ipcRenderer.invoke('reviews:fuzzyFind', { input }),
+
   // misc
   getXlsxTemplate: () => ipcRenderer.invoke('app:getTemplate'),
   backupDatabase: () => ipcRenderer.invoke('db:backup'),
