@@ -14,7 +14,7 @@ Built with **Electron 44** and **better-sqlite3** (React 18 renderer, vendored l
 
 ## Table of Contents
 
-- [Screenshots](#screenshots)
+- [Gif](#Gif)
 - [Download](#download)
 - [Give (entry) form](#give-entry-form)
 - [Entry Log](#entry-log)
@@ -33,7 +33,7 @@ Built with **Electron 44** and **better-sqlite3** (React 18 renderer, vendored l
 - [Files](#files)
 - [License](#license)
 
-## Screenshots
+## Gif
 
 <p align="center">
   <img src="gif/layout.gif" alt="App layout overview" />
